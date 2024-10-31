@@ -1,0 +1,669 @@
+[
+    {
+        "title": "Article",
+        "text": "The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets. This may be hard to shake off given such a tight election. Today, the highlight is the ECB decision where we see upside risks to the euro. We also have US retail sales and a Turkish rate decision",
+        "sentiment_score": 4.0,
+        "sentiment_label": "Positive",
+        "bias_score": 0,
+        "biased_sentences": [],
+        "propaganda_score": 4,
+        "propaganda_sentences": [
+            {
+                "sentence": "The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets.",
+                "score": 0.9456262588500977,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "This may be hard to shake off given such a tight election.",
+                "score": 0.9685125946998596,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Today, the highlight is the ECB decision where we see upside risks to the euro.",
+                "score": 0.9729264378547668,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "We also have US retail sales and a Turkish rate decision",
+                "score": 0.9506719708442688,
+                "label": "business_&_entrepreneurs"
+            }
+        ],
+        "final_score": 35.0,
+        "date": "2024-10-31 01:58:11",
+        "email": "dazgoop1@gmail.com"
+    },
+    {
+        "title": "Article",
+        "text": "FX Articles 17 October 2024 FX Daily: Trumps spectre hangs over the FX market The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets. This may be hard to shake off given such a tight election. Today, the highlight is the ECB decision where we see upside risks to the euro. We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win. Most emerging currencies are under pressure. And you can see why. In an entertaining interview with Bloomberg on Tuesday, Trump went large on using tariffs should he make it back into the White House. As columnists have said, no one should be surprised if this happens. The most immediate casualty from that interview was the Mexican peso. When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself. He intends to use tariffs to ensure that will be the case. In addition, when it comes to broader tariffs  particularly on the European auto industry  Trump said that tariffs of 10% would not be enough. With the election less than three weeks away, it looks like investors will be reluctant to position against such threats even though the election outcome remains very uncertain. If you haven't seen it already, please have a look at our market scenario analysis for the US election. For the US today, the highlight will be the September US retail sales data and weekly jobless claims. Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data. Given the large weighting of the euro in the DXY, the DXY could dip back to 103.00/103.20 if we are right with our ECB/euro analysis today, but we suspect the dollar finds decent support on any dips now. Chris Turner EUR: Some upside risks today The market is pricing a 25bp ECB rate cut today with a 97% probability. We doubt the ECB will disappoint those expectations, but we see upside risks to the short end of the EUR rates curve today . This is because the market now virtually prices a 25bp rate cut at each of the next six meetings and we do not believe the ECB is ready to capitulate and support faster easing (some 50bp cuts) towards the neutral rate near 2.00/2.25% for the deposit rate. If we're right, EUR/USD could be due a corrective bounce to the 1.0900/0920 area, although such gains may prove temporary. Perhaps a cleaner story for euro strength today will be EUR/CHF. Here we feel EUR/CHF has very much been dragged around by short-dated EUR rates this year and the view that the Swiss National Bank has a floor for the policy rate at 0.50%. Higher short-dated EUR rates today could drag EUR/CHF possibly up to the 0.9480/9500 area. Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week. On top of global events today, we also have a Central Bank of Turkey meeting and important speakers in Hungary. First thing this morning there is a local conference in Budapest where the finance minister, who according to newspaper rumours is expected to become the next central bank governor, the minister for economy and the deputy governor of the National Bank of Hungary are all expected to speak. With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track. Later today we will see the Central Bank of Turkey decision. In line with expectations, we expect the rate to remain unchanged at 50%. September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness. Market expectations of a first cut are shifting from October/November to December/January, which is showing up in the forward pricing. However, the spot TRY market remains on the same trajectory, which is the main reason we prefer spot over forwards at the moment, collecting high carry. Thus, reassurance from the Central Bank of Turkey should only extend the window where TRY remains the currency of choice for markets, while TURKGBs rather remain on the sidelines, waiting for the first CBT rate cut. Frantisek Taborsky CLP:  Another 25bp cut today leaves the peso with little protection The fact that Chinese stimulus measures have yet to deliver a material re-rating in China's growth prospects is evidenced by the ongoing weakness in Chile's peso. This continues to trade towards the weak side of a four-month trading range. In focus much later today will be the central bank's policy decision. Economists are unanimous in expecting a 25bp cut to 5.25%. As discussed in this month's FX Talking , the real rate protection for the peso is starting to look very lean. Equally, the peso suffered greatly under Trump between 2018-19. We are fearful that the local central bank could be cutting rates too deeply and the peso starts to take the strain again  especially with the central bank having failed to rebuild FX reserves after a massive intervention campaign in 2022. Pressure is building for USD/CLP to push decisively through 950. Chris Turner Tags FX ECB Dollar Download Download article Share Twitter LinkedIn E-mail Copy link Share Authors Chris Turner Global Head of Markets and Regional Head of Research for UK & CEE Frantisek Taborsky EMEA FX & FI Strategist Francesco Pesole FX Strategist Content Disclaimer This publication has been prepared by ING solely for information purposes irrespective of a particular user's means, financial situation or investment objectives. The information does not constitute investment recommendation, and nor is it investment, legal or tax advice or an offer or solicitation to purchase or sell any financial instrument. Read more",
+        "sentiment_score": 2.68,
+        "sentiment_label": "Neutral",
+        "bias_score": 2,
+        "biased_sentences": [
+            {
+                "sentence": "For the US today, the highlight will be the September US retail sales data and weekly jobless claims.",
+                "detected_terms": [
+                    "claims"
+                ]
+            },
+            {
+                "sentence": "Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data.",
+                "detected_terms": [
+                    "claims"
+                ]
+            }
+        ],
+        "propaganda_score": 39,
+        "propaganda_sentences": [
+            {
+                "sentence": "FX Articles 17 October 2024 FX Daily: Trumps spectre hangs over the FX market The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets.",
+                "score": 0.969853937625885,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "This may be hard to shake off given such a tight election.",
+                "score": 0.9685125946998596,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Today, the highlight is the ECB decision where we see upside risks to the euro.",
+                "score": 0.9729264378547668,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win.",
+                "score": 0.9766560196876526,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "In an entertaining interview with Bloomberg on Tuesday, Trump went large on using tariffs should he make it back into the White House.",
+                "score": 0.9828934073448181,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "As columnists have said, no one should be surprised if this happens.",
+                "score": 0.9802180528640747,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "The most immediate casualty from that interview was the Mexican peso.",
+                "score": 0.9915156364440918,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself.",
+                "score": 0.9356325268745422,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "He intends to use tariffs to ensure that will be the case.",
+                "score": 0.9491813778877258,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "In addition, when it comes to broader tariffs  particularly on the European auto industry  Trump said that tariffs of 10% would not be enough.",
+                "score": 0.927772581577301,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "With the election less than three weeks away, it looks like investors will be reluctant to position against such threats even though the election outcome remains very uncertain.",
+                "score": 0.9880973696708679,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "If you haven't seen it already, please have a look at our market scenario analysis for the US election.",
+                "score": 0.9948878884315491,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "For the US today, the highlight will be the September US retail sales data and weekly jobless claims.",
+                "score": 0.9513611793518066,
+                "label": "business_&_entrepreneurs"
+            },
+            {
+                "sentence": "Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data.",
+                "score": 0.9576104283332825,
+                "label": "business_&_entrepreneurs"
+            },
+            {
+                "sentence": "Given the large weighting of the euro in the DXY, the DXY could dip back to 103.00/103.20 if we are right with our ECB/euro analysis today, but we suspect the dollar finds decent support on any dips now.",
+                "score": 0.9203107953071594,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "The market is pricing a 25bp ECB rate cut today with a 97% probability.",
+                "score": 0.9686614274978638,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "We doubt the ECB will disappoint those expectations, but we see upside risks to the short end of the EUR rates curve today .",
+                "score": 0.9597043991088867,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "This is because the market now virtually prices a 25bp rate cut at each of the next six meetings and we do not believe the ECB is ready to capitulate and support faster easing (some 50bp cuts) towards the neutral rate near 2.00/2.25% for the deposit rate.",
+                "score": 0.9585235714912415,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Perhaps a cleaner story for euro strength today will be EUR/CHF.",
+                "score": 0.9544411301612854,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Here we feel EUR/CHF has very much been dragged around by short-dated EUR rates this year and the view that the Swiss National Bank has a floor for the policy rate at 0.50%.",
+                "score": 0.9696885347366333,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Higher short-dated EUR rates today could drag EUR/CHF possibly up to the 0.9480/9500 area.",
+                "score": 0.9461209177970886,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week.",
+                "score": 0.9796351790428162,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "On top of global events today, we also have a Central Bank of Turkey meeting and important speakers in Hungary.",
+                "score": 0.9900357127189636,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "First thing this morning there is a local conference in Budapest where the finance minister, who according to newspaper rumours is expected to become the next central bank governor, the minister for economy and the deputy governor of the National Bank of Hungary are all expected to speak.",
+                "score": 0.983629047870636,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track.",
+                "score": 0.973773181438446,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Later today we will see the Central Bank of Turkey decision.",
+                "score": 0.9890797734260559,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "In line with expectations, we expect the rate to remain unchanged at 50%.",
+                "score": 0.9775426387786865,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness.",
+                "score": 0.9252903461456299,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Market expectations of a first cut are shifting from October/November to December/January, which is showing up in the forward pricing.",
+                "score": 0.9243038296699524,
+                "label": "business_&_entrepreneurs"
+            },
+            {
+                "sentence": "Thus, reassurance from the Central Bank of Turkey should only extend the window where TRY remains the currency of choice for markets, while TURKGBs rather remain on the sidelines, waiting for the first CBT rate cut.",
+                "score": 0.954416811466217,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Frantisek Taborsky CLP:  Another 25bp cut today leaves the peso with little protection The fact that Chinese stimulus measures have yet to deliver a material re-rating in China's growth prospects is evidenced by the ongoing weakness in Chile's peso.",
+                "score": 0.9089725613594055,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "In focus much later today will be the central bank's policy decision.",
+                "score": 0.9873506426811218,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Economists are unanimous in expecting a 25bp cut to 5.25%.",
+                "score": 0.944781482219696,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "As discussed in this month's FX Talking , the real rate protection for the peso is starting to look very lean.",
+                "score": 0.9661172032356262,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Equally, the peso suffered greatly under Trump between 2018-19.",
+                "score": 0.9795403480529785,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "We are fearful that the local central bank could be cutting rates too deeply and the peso starts to take the strain again  especially with the central bank having failed to rebuild FX reserves after a massive intervention campaign in 2022.",
+                "score": 0.9722504615783691,
+                "label": "news_&_social_concern"
+            },
+            {
+                "sentence": "Chris Turner Tags FX ECB Dollar Download Download article Share Twitter LinkedIn E-mail Copy link Share Authors Chris Turner Global Head of Markets and Regional Head of Research for UK & CEE Frantisek Taborsky EMEA FX & FI Strategist Francesco Pesole FX Strategist Content Disclaimer",
+                "score": 0.9465290307998657,
+                "label": "business_&_entrepreneurs"
+            },
+            {
+                "sentence": "This publication has been prepared by ING solely for information purposes irrespective of a particular user's means, financial situation or investment objectives.",
+                "score": 0.9675726294517517,
+                "label": "business_&_entrepreneurs"
+            },
+            {
+                "sentence": "The information does not constitute investment recommendation, and nor is it investment, legal or tax advice or an offer or solicitation to purchase or sell any financial instrument.",
+                "score": 0.959559440612793,
+                "label": "business_&_entrepreneurs"
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-31 02:02:06",
+        "email": "dazgoop1@gmail.com"
+    },
+    {
+        "title": "Article",
+        "text": "FX Articles 17 October 2024 FX Daily: Trumps spectre hangs over the FX market The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets. This may be hard to shake off given such a tight election. Today, the highlight is the ECB decision where we see upside risks to the euro. We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win. Most emerging currencies are under pressure. And you can see why. In an entertaining interview with Bloomberg on Tuesday, Trump went large on using tariffs should he make it back into the White House. As columnists have said, no one should be surprised if this happens. The most immediate casualty from that interview was the Mexican peso. When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself. He intends to use tariffs to ensure that will be the case. In addition, when it comes to broader tariffs  particularly on the European auto industry  Trump said that tariffs of 10% would not be enough. With the election less than three weeks away, it looks like investors will be reluctant to position against such threats even though the election outcome remains very uncertain. If you haven't seen it already, please have a look at our market scenario analysis for the US election. For the US today, the highlight will be the September US retail sales data and weekly jobless claims. Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data. Given the large weighting of the euro in the DXY, the DXY could dip back to 103.00/103.20 if we are right with our ECB/euro analysis today, but we suspect the dollar finds decent support on any dips now. Chris Turner EUR: Some upside risks today The market is pricing a 25bp ECB rate cut today with a 97% probability. We doubt the ECB will disappoint those expectations, but we see upside risks to the short end of the EUR rates curve today . This is because the market now virtually prices a 25bp rate cut at each of the next six meetings and we do not believe the ECB is ready to capitulate and support faster easing (some 50bp cuts) towards the neutral rate near 2.00/2.25% for the deposit rate. If we're right, EUR/USD could be due a corrective bounce to the 1.0900/0920 area, although such gains may prove temporary. Perhaps a cleaner story for euro strength today will be EUR/CHF. Here we feel EUR/CHF has very much been dragged around by short-dated EUR rates this year and the view that the Swiss National Bank has a floor for the policy rate at 0.50%. Higher short-dated EUR rates today could drag EUR/CHF possibly up to the 0.9480/9500 area. Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week. On top of global events today, we also have a Central Bank of Turkey meeting and important speakers in Hungary. First thing this morning there is a local conference in Budapest where the finance minister, who according to newspaper rumours is expected to become the next central bank governor, the minister for economy and the deputy governor of the National Bank of Hungary are all expected to speak. With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track. Later today we will see the Central Bank of Turkey decision. In line with expectations, we expect the rate to remain unchanged at 50%. September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness. Market expectations of a first cut are shifting from October/November to December/January, which is showing up in the forward pricing. However, the spot TRY market remains on the same trajectory, which is the main reason we prefer spot over forwards at the moment, collecting high carry. Thus, reassurance from the Central Bank of Turkey should only extend the window where TRY remains the currency of choice for markets, while TURKGBs rather remain on the sidelines, waiting for the first CBT rate cut. Frantisek Taborsky CLP:  Another 25bp cut today leaves the peso with little protection The fact that Chinese stimulus measures have yet to deliver a material re-rating in China's growth prospects is evidenced by the ongoing weakness in Chile's peso. This continues to trade towards the weak side of a four-month trading range. In focus much later today will be the central bank's policy decision. Economists are unanimous in expecting a 25bp cut to 5.25%. As discussed in this month's FX Talking , the real rate protection for the peso is starting to look very lean. Equally, the peso suffered greatly under Trump between 2018-19. We are fearful that the local central bank could be cutting rates too deeply and the peso starts to take the strain again  especially with the central bank having failed to rebuild FX reserves after a massive intervention campaign in 2022. Pressure is building for USD/CLP to push decisively through 950. Chris Turner Tags FX ECB Dollar Download Download article Share Twitter LinkedIn E-mail Copy link Share Authors Chris Turner Global Head of Markets and Regional Head of Research for UK & CEE Frantisek Taborsky EMEA FX & FI Strategist Francesco Pesole FX Strategist Content Disclaimer This publication has been prepared by ING solely for information purposes irrespective of a particular user's means, financial situation or investment objectives. The information does not constitute investment recommendation, and nor is it investment, legal or tax advice or an offer or solicitation to purchase or sell any financial instrument. Read more",
+        "sentiment_score": 2.68,
+        "sentiment_label": "Neutral",
+        "bias_score": 2,
+        "biased_sentences": [
+            {
+                "sentence": "For the US today, the highlight will be the September US retail sales data and weekly jobless claims.",
+                "detected_terms": [
+                    "claims"
+                ]
+            },
+            {
+                "sentence": "Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data.",
+                "detected_terms": [
+                    "claims"
+                ]
+            }
+        ],
+        "propaganda_score": 5,
+        "propaganda_sentences": [
+            {
+                "sentence": "We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win.",
+                "score": 0.9972532391548157,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself.",
+                "score": 0.98328697681427,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week.",
+                "score": 0.9965960383415222,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track.",
+                "score": 0.9807528853416443,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness.",
+                "score": 0.9961084723472595,
+                "label": "PROPAGANDA"
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-31 02:23:12",
+        "email": "dazgoop1@gmail.com"
+    },
+    {
+        "title": "Article",
+        "text": "FX Articles 17 October 2024 FX Daily: Trumps spectre hangs over the FX market The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets. This may be hard to shake off given such a tight election. Today, the highlight is the ECB decision where we see upside risks to the euro. We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win. Most emerging currencies are under pressure. And you can see why. In an entertaining interview with Bloomberg on Tuesday, Trump went large on using tariffs should he make it back into the White House. As columnists have said, no one should be surprised if this happens. The most immediate casualty from that interview was the Mexican peso. When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself. He intends to use tariffs to ensure that will be the case. In addition, when it comes to broader tariffs  particularly on the European auto industry  Trump said that tariffs of 10% would not be enough. With the election less than three weeks away, it looks like investors will be reluctant to position against such threats even though the election outcome remains very uncertain. If you haven't seen it already, please have a look at our market scenario analysis for the US election. For the US today, the highlight will be the September US retail sales data and weekly jobless claims. Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data. Given the large weighting of the euro in the DXY, the DXY could dip back to 103.00/103.20 if we are right with our ECB/euro analysis today, but we suspect the dollar finds decent support on any dips now. Chris Turner EUR: Some upside risks today The market is pricing a 25bp ECB rate cut today with a 97% probability. We doubt the ECB will disappoint those expectations, but we see upside risks to the short end of the EUR rates curve today . This is because the market now virtually prices a 25bp rate cut at each of the next six meetings and we do not believe the ECB is ready to capitulate and support faster easing (some 50bp cuts) towards the neutral rate near 2.00/2.25% for the deposit rate. If we're right, EUR/USD could be due a corrective bounce to the 1.0900/0920 area, although such gains may prove temporary. Perhaps a cleaner story for euro strength today will be EUR/CHF. Here we feel EUR/CHF has very much been dragged around by short-dated EUR rates this year and the view that the Swiss National Bank has a floor for the policy rate at 0.50%. Higher short-dated EUR rates today could drag EUR/CHF possibly up to the 0.9480/9500 area. Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week. On top of global events today, we also have a Central Bank of Turkey meeting and important speakers in Hungary. First thing this morning there is a local conference in Budapest where the finance minister, who according to newspaper rumours is expected to become the next central bank governor, the minister for economy and the deputy governor of the National Bank of Hungary are all expected to speak. With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track. Later today we will see the Central Bank of Turkey decision. In line with expectations, we expect the rate to remain unchanged at 50%. September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness. Market expectations of a first cut are shifting from October/November to December/January, which is showing up in the forward pricing. However, the spot TRY market remains on the same trajectory, which is the main reason we prefer spot over forwards at the moment, collecting high carry. Thus, reassurance from the Central Bank of Turkey should only extend the window where TRY remains the currency of choice for markets, while TURKGBs rather remain on the sidelines, waiting for the first CBT rate cut. Frantisek Taborsky CLP:  Another 25bp cut today leaves the peso with little protection The fact that Chinese stimulus measures have yet to deliver a material re-rating in China's growth prospects is evidenced by the ongoing weakness in Chile's peso. This continues to trade towards the weak side of a four-month trading range. In focus much later today will be the central bank's policy decision. Economists are unanimous in expecting a 25bp cut to 5.25%. As discussed in this month's FX Talking , the real rate protection for the peso is starting to look very lean. Equally, the peso suffered greatly under Trump between 2018-19. We are fearful that the local central bank could be cutting rates too deeply and the peso starts to take the strain again  especially with the central bank having failed to rebuild FX reserves after a massive intervention campaign in 2022. Pressure is building for USD/CLP to push decisively through 950. Chris Turner Tags FX ECB Dollar Download Download article Share Twitter LinkedIn E-mail Copy link Share Authors Chris Turner Global Head of Markets and Regional Head of Research for UK & CEE Frantisek Taborsky EMEA FX & FI Strategist Francesco Pesole FX Strategist Content Disclaimer This publication has been prepared by ING solely for information purposes irrespective of a particular user's means, financial situation or investment objectives. The information does not constitute investment recommendation, and nor is it investment, legal or tax advice or an offer or solicitation to purchase or sell any financial instrument. Read more",
+        "sentiment_score": 2.68,
+        "sentiment_label": "Neutral",
+        "bias_score": 2,
+        "biased_sentences": [
+            {
+                "sentence": "For the US today, the highlight will be the September US retail sales data and weekly jobless claims.",
+                "detected_terms": [
+                    "claims"
+                ]
+            },
+            {
+                "sentence": "Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data.",
+                "detected_terms": [
+                    "claims"
+                ]
+            }
+        ],
+        "propaganda_score": 5,
+        "propaganda_sentences": [
+            {
+                "sentence": "We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win.",
+                "score": 0.9972532391548157,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself.",
+                "score": 0.98328697681427,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week.",
+                "score": 0.9965960383415222,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track.",
+                "score": 0.9807528853416443,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness.",
+                "score": 0.9961084723472595,
+                "label": "PROPAGANDA"
+            }
+        ],
+        "final_score": 34.55319148936171,
+        "date": "2024-10-31 02:30:25",
+        "email": "dazgoop1@gmail.com"
+    },
+    {
+        "title": "Article",
+        "text": "Teachers want better support to deal with misogyny Image source, Getty Images Image caption, Andrew Tate was charged with rape and human trafficking in 2023 Jacob Morris Newyddion S4C Charlie Buckland BBC News Published 18 October 2024 Teachers have called for better support to deal with the \"alarming\" misogynistic influence of social media on children in schools, specifically teenage boys. One school resorted to setting up a staff committee after noticing that pupils as young as 11 and 13 were using sexist language used by online influencers such as Andrew Tate. The children's commissioner for Wales echoed the calls adding that \"sexist and misogynistic language can have an effect in real life\". The Welsh government said online safety was part of the new curriculum and there were some resources available to teachers, pupils and parents on how to deal with harmful influences such as online misogyny. Racism fuelling far-right threat, MI5 chief warns Published 14 July 2021 Rise in school sexism down to phones, says union Published 5 April Homophobic abuse 'normalised' in primary schools Published 9 February 2022 Teacher and member of the committee at Ysgol Gyfun Gymraeg Llangynwyd, in Maesteg, Jenna Rolls-Jones, said they saw elements of misogyny coming out with children as young as 11 years old. \"It's so scary, just the fact that pupils were thinking about women in a negative way, they're so young and they don't realise the language they use.\" One slang term that has been used in the school is \"Sigma\", a word in internet slang used to describe a male who is a \"lone wolf\". A sigma male is typically denoted as an archetype of a male who is similar to the alpha male, but unlike an alpha male, sigma males are more introverted and value solitude. \"We don't have a lot of advice as to how to challenge this language,\" she admitted. The school said that the lack of leadership and resources available has led them to take matters into their own hands. \"There is very little communication or any kind of training for teachers,\" said Owain Tudur, Pastoral Leader at the school. \"In terms of support from government level and in the world of education there aren't enough resources being shared with schools for us to be able to tackle problems that come from social media. \"A further guide to get a solid understanding of what is happening online would be welcomed so that we can reflect it in school.\" Image source, Getty Images Image caption, Teachers say there is very little training when it comes to dealing with social media For some young boys at the school, seeing disrespectful content towards girls was something they saw constantly on social media, through self-proclaimed misogynistic influencers like Andrew Tate. Pupils also stressed the importance of discussing the subject at school and understanding that this language was not acceptable in society. The children's commissioner for Wales, Rocio Cifuentes, agreed more support from the Welsh government was needed on the issue. Ms Cifuentes said: \"From what I've heard from teachers and schools they would like more clarity, guidance and more resources to help them manage these new and difficult conversations that are emerging.\" It comes as the head of MI5, Ken McCallum, expressed concern over the number of young people being drawn into online extremism. About 13% of those investigated for involvement in terrorism were under 18 [years old], a threefold increase in the last three years. One community police officer said it was important to encourage conversations in the classrooms. \"Some questions they're not comfortable asking a teacher, they can get the right advice from the police about the consequences to prevent them going down the wrong path,\" they added. The Welsh government said it was \"vital\" that young people were kept safe online and that it was \"a key part of the new curriculum\". It added that \"resources are available to teachers, pupils and parents on how to deal with harmful influences such as online misogyny\". Related topics Wales Social media Schools Maesteg Andrew Tate More on this story Andrew Tate: The self-proclaimed misogynist Published 23 July Primary schools urged to teach kids about misogyny Published 18 October Rise in school sexism down to phones, says union Published 5 April",
+        "sentiment_score": 2.48,
+        "sentiment_label": "Negative",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "S4C Charlie Buckland BBC News Published 18 October 2024 Teachers have called for better support to deal with the \"alarming\" misogynistic influence of social media on children in schools, specifically teenage boys.",
+                "detected_terms": [
+                    "alarming"
+                ]
+            }
+        ],
+        "propaganda_score": 7,
+        "propaganda_sentences": [
+            {
+                "sentence": "S4C Charlie Buckland BBC News Published 18 October 2024 Teachers have called for better support to deal with the \"alarming\" misogynistic influence of social media on children in schools, specifically teenage boys.",
+                "score": 0.9982386827468872,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "The children's commissioner for Wales echoed the calls adding that \"sexist and misogynistic language can have an effect in real life\".",
+                "score": 0.9957162737846375,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Racism fuelling far-right threat, MI5 chief warns Published 14 July 2021 Rise in school sexism down to phones, says union Published 5 April Homophobic abuse 'normalised' in primary schools Published 9 February 2022 Teacher and member of the committee at Ysgol Gyfun Gymraeg Llangynwyd, in Maesteg, Jenna Rolls-Jones, said they saw elements of misogyny coming out with children as young as 11 years old.",
+                "score": 0.9980744123458862,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "A sigma male is typically denoted as an archetype of a male who is similar to the alpha male, but unlike an alpha male, sigma males are more introverted and value solitude.",
+                "score": 0.992341160774231,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Image source, Getty Images Image caption, Teachers say there is very little training when it comes to dealing with social media For some young boys at the school, seeing disrespectful content towards girls was something they saw constantly on social media, through self-proclaimed misogynistic influencers like Andrew Tate.",
+                "score": 0.9972295165061951,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "It comes as the head of MI5, Ken McCallum, expressed concern over the number of young people being drawn into online extremism.",
+                "score": 0.9933803081512451,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "It added that \"resources are available to teachers, pupils and parents on how to deal with harmful influences such as online misogyny\".",
+                "score": 0.9567169547080994,
+                "label": "PROPAGANDA"
+            }
+        ],
+        "final_score": 21.0,
+        "date": "2024-10-31 02:39:57",
+        "email": "dazgoop1@gmail.com"
+    },
+    {
+        "title": "Article",
+        "text": "Demi Moore in new film The Substance. Photograph: Christine Tamalet/ Universal Studios View image in fullscreen Demi Moore in new film The Substance. Photograph: Christine Tamalet/ Universal Studios Opinion Men Yes, Andrew Tate is a misogynist, but his real game is exploiting mens vulnerabilities for cash Gaby Hinsliff It is a con women know well, yet it is important to recognise that men can also be its victims Fri 4 Oct 2024 10.00 BST Last modified on Fri 4 Oct 2024 10.01 BST Share T here is one scene in Demi Moores new film, The Substance, that made the actor cry, and its a scene about self-loathing. Getting ready for a date, her character looks in the mirror and is driven to violent despair. Nothing she tries looks right; everything about her suddenly seems wrong. Moore, who plays a TV star driven to extreme measures after being fired for getting older, has said the film is about the shame women are conditioned to feel about their bodies and the punishment we are conned into inflicting on ourselves as a result, from expensive miracle creams we know wont really work right up to the plastic surgeons knife. Swap the older woman in the film for a teenage girl, starving herself because she doesnt meet some impossible physical ideal, and the message rings just as true. But what if you swapped her for a teenage boy? Young men get insecure about their looks too, of course. But its weakness, the fear of losing face or being thought a wimp, that is their real achilles heel, and something far uglier than the beauty industry is homing in on that. In Clown World , their new book on the notorious social media influencer Andrew Tate, the journalists Jamie Tahsin and Matt Shea describe their four years investigating toxic masculinity online and its real-life impact. With Tate currently facing charges of rape, sexual exploitation and human trafficking in Romania, much of the book is dedicated to the stories of his female accusers and to the murky underside of the webcamming industry. But they also make clear that the heart of his online operation was a lucrative commercial hustle targeting often anxious, insecure men: and that the idea of masculinity he was selling is damaging not just to women, but to the men suckered into it. Tates misogynistic rants of course helped his posts, with their embedded links to the online courses from which he made his money, go viral. But he also tapped into his own followers deep-seated self-loathing, mocking their perceived inadequacies to soften them up for the hard sell. The choice he offered was to keep on smoking weed and playing video games and be a loser for ever, or pay $49.99 a month to join his Hustlers University (basically a chatroom, with dubious get-rich-quick courses in trading cryptocurrency or copywriting bolted on). View image in fullscreen Andrew Tate after a hearing in Bucharest, Romania, 28 August. Inside the chatroom, Shea and Tahsin found worryingly young boys beating themselves up over their perceived manly failings. In Tateworld, education was for geeks and losers, and taking antidepressants was a sign of weakness  a counsel of despair for kids who were already struggling. Men with more money to burn, meanwhile, could join the more cult-like War Room or pay to take part in what Tate called the test, a mysterious kind of initiation rite that turned out to involve slugging it out violently with a professional cage fighter. Those who declined were shamed by being made to face the wall and list all the ways they had failed as men. Almost unbelievably, the writers point out, Tate had essentially persuaded 100 men to pay him $5,000 each for a choice between being beaten to a pulp or publicly humiliated. Yet even Shea, who entered the test as part of a documentary the pair were making, writes that he found the experience of being inside Tates world unexpectedly destabilising; that for a while it made him question his own masculinity. Shame, it turns out, is a hell of a drug for men and women, and those who can monetise it are laughing all the way to the bank. Teenage boys attention spans are short enough that for them, Tate is history now. But TikTok is still full of wannabes flexing about their Rolexes and supercars and hot model girlfriends, scornfully telling followers that wealth is a mindset and so if theyre broke, theyre losers. Far-right political movements have learned to use the language of the manosphere to recruit new gen Z supporters, while a darker version of the core idea that being a man is about ostentatious wealth and status  backed up by a willingness to use violence and an obsession with never losing face  has long underpinned gang culture. Yet for young men anxious about failing to live up to the ideal they see all around them, there isnt yet a fully fledged equivalent of the body positivity movement, which encourages women to love themselves as they are instead of obsessing over physical flaws that dont actually exist. Perhaps its not for a woman to identify what that equivalent should be, but I suspect Shea and Tahsin are right to argue that young men need healthier ways to challenge and prove themselves than theyre currently being offered by the manosphere. Crucial to many mens sense of self, they argue, is the longing to go through some kind of hardship and emerge triumphant, even if these days its more likely to be unclogging a drain than waging war. Parents, meanwhile, need to find ways of talking not just about how toxic masculinity hurts girls  though of course it does  but about how it hurts boys own life chances, too. We tell our teenage daughters not to beat themselves up for not fitting some ridiculously outdated mould. Somehow, we need to get the same message across to our sons. Gaby Hinsliff is a Guardian columnist Do you have an opinion on the issues raised in this article? If you would like to submit a response of up to 300 words by email to be considered for publication in our letters section, please click here . Explore more on these topics Men Opinion Demi Moore Andrew Tate Violence against women and girls comment Share Reuse this content Most viewed Most viewed",
+        "sentiment_score": 2.65,
+        "sentiment_label": "Neutral",
+        "bias_score": 0,
+        "biased_sentences": [],
+        "propaganda_score": 21,
+        "propaganda_sentences": [
+            {
+                "sentence": "Yes, Andrew Tate is a misogynist, but his real game is exploiting mens vulnerabilities for cash Gaby Hinsliff",
+                "score": 0.9980818033218384,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Getting ready for a date, her character looks in the mirror and is driven to violent despair.",
+                "score": 0.9980292916297913,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Nothing she tries looks right; everything about her suddenly seems wrong.",
+                "score": 0.9217641949653625,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Moore, who plays a TV star driven to extreme measures after being fired for getting older, has said the film is about the shame women are conditioned to feel about their bodies and the punishment we are conned into inflicting on ourselves as a result, from expensive miracle creams we know wont really work right up to the plastic surgeons knife.",
+                "score": 0.9977356195449829,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Young men get insecure about their looks too, of course.",
+                "score": 0.9958388805389404,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But its weakness, the fear of losing face or being thought a wimp, that is their real achilles heel, and something far uglier than the beauty industry is homing in on that.",
+                "score": 0.9980121850967407,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "In Clown World , their new book on the notorious social media influencer Andrew Tate, the journalists Jamie Tahsin and Matt Shea describe their four years investigating toxic masculinity online and its real-life impact.",
+                "score": 0.9979851245880127,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "With Tate currently facing charges of rape, sexual exploitation and human trafficking in Romania, much of the book is dedicated to the stories of his female accusers and to the murky underside of the webcamming industry.",
+                "score": 0.9977123737335205,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But they also make clear that the heart of his online operation was a lucrative commercial hustle targeting often anxious, insecure men: and that the idea of masculinity he was selling is damaging not just to women, but to the men suckered into it.",
+                "score": 0.9979343414306641,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But he also tapped into his own followers deep-seated self-loathing, mocking their perceived inadequacies to soften them up for the hard sell.",
+                "score": 0.9958711266517639,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "The choice he offered was to keep on smoking weed and playing video games and be a loser for ever, or pay $49.99 a month to join his Hustlers University (basically a chatroom, with dubious get-rich-quick courses in trading cryptocurrency or copywriting bolted on).",
+                "score": 0.9982948899269104,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Inside the chatroom, Shea and Tahsin found worryingly young boys beating themselves up over their perceived manly failings.",
+                "score": 0.9952470660209656,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "In Tateworld, education was for geeks and losers, and taking antidepressants was a sign of weakness  a counsel of despair for kids who were already struggling.",
+                "score": 0.997853696346283,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Men with more money to burn, meanwhile, could join the more cult-like War Room or pay to take part in what Tate called the test, a mysterious kind of initiation rite that turned out to involve slugging it out violently with a professional cage fighter.",
+                "score": 0.9978748559951782,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Those who declined were shamed by being made to face the wall and list all the ways they had failed as men.",
+                "score": 0.997718095779419,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Almost unbelievably, the writers point out, Tate had essentially persuaded 100 men to pay him $5,000 each for a choice between being beaten to a pulp or publicly humiliated.",
+                "score": 0.9962195754051208,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Shame, it turns out, is a hell of a drug for men and women, and those who can monetise it are laughing all the way to the bank.",
+                "score": 0.9982122182846069,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But TikTok is still full of wannabes flexing about their Rolexes and supercars and hot model girlfriends, scornfully telling followers that wealth is a mindset and so if theyre broke, theyre losers.",
+                "score": 0.9977942705154419,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Far-right political movements have learned to use the language of the manosphere to recruit new gen Z supporters, while a darker version of the core idea that being a man is about ostentatious wealth and status  backed up by a willingness to use violence and an obsession with never losing face  has long underpinned gang culture.",
+                "score": 0.9978873133659363,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Parents, meanwhile, need to find ways of talking not just about how toxic masculinity hurts girls  though of course it does  but about how it hurts boys own life chances, too.",
+                "score": 0.9982677698135376,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "We tell our teenage daughters not to beat themselves up for not fitting some ridiculously outdated mould.",
+                "score": 0.9981690645217896,
+                "label": "PROPAGANDA"
+            }
+        ],
+        "final_score": 15.0,
+        "date": "2024-10-31 02:46:16",
+        "email": "dazgoop1@gmail.com"
+    },
+    {
+        "title": "Article",
+        "text": "Demi Moore in new film The Substance. Photograph: Christine Tamalet/ Universal Studios View image in fullscreen Demi Moore in new film The Substance. Photograph: Christine Tamalet/ Universal Studios Opinion Men Yes, Andrew Tate is a misogynist, but his real game is exploiting mens vulnerabilities for cash Gaby Hinsliff It is a con women know well, yet it is important to recognise that men can also be its victims Fri 4 Oct 2024 10.00 BST Last modified on Fri 4 Oct 2024 10.01 BST Share T here is one scene in Demi Moores new film, The Substance, that made the actor cry, and its a scene about self-loathing. Getting ready for a date, her character looks in the mirror and is driven to violent despair. Nothing she tries looks right; everything about her suddenly seems wrong. Moore, who plays a TV star driven to extreme measures after being fired for getting older, has said the film is about the shame women are conditioned to feel about their bodies and the punishment we are conned into inflicting on ourselves as a result, from expensive miracle creams we know wont really work right up to the plastic surgeons knife. Swap the older woman in the film for a teenage girl, starving herself because she doesnt meet some impossible physical ideal, and the message rings just as true. But what if you swapped her for a teenage boy? Young men get insecure about their looks too, of course. But its weakness, the fear of losing face or being thought a wimp, that is their real achilles heel, and something far uglier than the beauty industry is homing in on that. In Clown World , their new book on the notorious social media influencer Andrew Tate, the journalists Jamie Tahsin and Matt Shea describe their four years investigating toxic masculinity online and its real-life impact. With Tate currently facing charges of rape, sexual exploitation and human trafficking in Romania, much of the book is dedicated to the stories of his female accusers and to the murky underside of the webcamming industry. But they also make clear that the heart of his online operation was a lucrative commercial hustle targeting often anxious, insecure men: and that the idea of masculinity he was selling is damaging not just to women, but to the men suckered into it. Tates misogynistic rants of course helped his posts, with their embedded links to the online courses from which he made his money, go viral. But he also tapped into his own followers deep-seated self-loathing, mocking their perceived inadequacies to soften them up for the hard sell. The choice he offered was to keep on smoking weed and playing video games and be a loser for ever, or pay $49.99 a month to join his Hustlers University (basically a chatroom, with dubious get-rich-quick courses in trading cryptocurrency or copywriting bolted on). View image in fullscreen Andrew Tate after a hearing in Bucharest, Romania, 28 August. Inside the chatroom, Shea and Tahsin found worryingly young boys beating themselves up over their perceived manly failings. In Tateworld, education was for geeks and losers, and taking antidepressants was a sign of weakness  a counsel of despair for kids who were already struggling. Men with more money to burn, meanwhile, could join the more cult-like War Room or pay to take part in what Tate called the test, a mysterious kind of initiation rite that turned out to involve slugging it out violently with a professional cage fighter. Those who declined were shamed by being made to face the wall and list all the ways they had failed as men. Almost unbelievably, the writers point out, Tate had essentially persuaded 100 men to pay him $5,000 each for a choice between being beaten to a pulp or publicly humiliated. Yet even Shea, who entered the test as part of a documentary the pair were making, writes that he found the experience of being inside Tates world unexpectedly destabilising; that for a while it made him question his own masculinity. Shame, it turns out, is a hell of a drug for men and women, and those who can monetise it are laughing all the way to the bank. Teenage boys attention spans are short enough that for them, Tate is history now. But TikTok is still full of wannabes flexing about their Rolexes and supercars and hot model girlfriends, scornfully telling followers that wealth is a mindset and so if theyre broke, theyre losers. Far-right political movements have learned to use the language of the manosphere to recruit new gen Z supporters, while a darker version of the core idea that being a man is about ostentatious wealth and status  backed up by a willingness to use violence and an obsession with never losing face  has long underpinned gang culture. Yet for young men anxious about failing to live up to the ideal they see all around them, there isnt yet a fully fledged equivalent of the body positivity movement, which encourages women to love themselves as they are instead of obsessing over physical flaws that dont actually exist. Perhaps its not for a woman to identify what that equivalent should be, but I suspect Shea and Tahsin are right to argue that young men need healthier ways to challenge and prove themselves than theyre currently being offered by the manosphere. Crucial to many mens sense of self, they argue, is the longing to go through some kind of hardship and emerge triumphant, even if these days its more likely to be unclogging a drain than waging war. Parents, meanwhile, need to find ways of talking not just about how toxic masculinity hurts girls  though of course it does  but about how it hurts boys own life chances, too. We tell our teenage daughters not to beat themselves up for not fitting some ridiculously outdated mould. Somehow, we need to get the same message across to our sons. Gaby Hinsliff is a Guardian columnist Do you have an opinion on the issues raised in this article? If you would like to submit a response of up to 300 words by email to be considered for publication in our letters section, please click here . Explore more on these topics Men Opinion Demi Moore Andrew Tate Violence against women and girls comment Share Reuse this content Most viewed Most viewed",
+        "sentiment_score": 2.65,
+        "sentiment_label": "Neutral",
+        "bias_score": 0,
+        "biased_sentences": [],
+        "propaganda_score": 21,
+        "propaganda_sentences": [
+            {
+                "sentence": "Yes, Andrew Tate is a misogynist, but his real game is exploiting mens vulnerabilities for cash Gaby Hinsliff",
+                "score": 0.9980818033218384,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Getting ready for a date, her character looks in the mirror and is driven to violent despair.",
+                "score": 0.9980292916297913,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Nothing she tries looks right; everything about her suddenly seems wrong.",
+                "score": 0.9217641949653625,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Moore, who plays a TV star driven to extreme measures after being fired for getting older, has said the film is about the shame women are conditioned to feel about their bodies and the punishment we are conned into inflicting on ourselves as a result, from expensive miracle creams we know wont really work right up to the plastic surgeons knife.",
+                "score": 0.9977356195449829,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Young men get insecure about their looks too, of course.",
+                "score": 0.9958388805389404,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But its weakness, the fear of losing face or being thought a wimp, that is their real achilles heel, and something far uglier than the beauty industry is homing in on that.",
+                "score": 0.9980121850967407,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "In Clown World , their new book on the notorious social media influencer Andrew Tate, the journalists Jamie Tahsin and Matt Shea describe their four years investigating toxic masculinity online and its real-life impact.",
+                "score": 0.9979851245880127,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "With Tate currently facing charges of rape, sexual exploitation and human trafficking in Romania, much of the book is dedicated to the stories of his female accusers and to the murky underside of the webcamming industry.",
+                "score": 0.9977123737335205,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But they also make clear that the heart of his online operation was a lucrative commercial hustle targeting often anxious, insecure men: and that the idea of masculinity he was selling is damaging not just to women, but to the men suckered into it.",
+                "score": 0.9979343414306641,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But he also tapped into his own followers deep-seated self-loathing, mocking their perceived inadequacies to soften them up for the hard sell.",
+                "score": 0.9958711266517639,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "The choice he offered was to keep on smoking weed and playing video games and be a loser for ever, or pay $49.99 a month to join his Hustlers University (basically a chatroom, with dubious get-rich-quick courses in trading cryptocurrency or copywriting bolted on).",
+                "score": 0.9982948899269104,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Inside the chatroom, Shea and Tahsin found worryingly young boys beating themselves up over their perceived manly failings.",
+                "score": 0.9952470660209656,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "In Tateworld, education was for geeks and losers, and taking antidepressants was a sign of weakness  a counsel of despair for kids who were already struggling.",
+                "score": 0.997853696346283,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Men with more money to burn, meanwhile, could join the more cult-like War Room or pay to take part in what Tate called the test, a mysterious kind of initiation rite that turned out to involve slugging it out violently with a professional cage fighter.",
+                "score": 0.9978748559951782,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Those who declined were shamed by being made to face the wall and list all the ways they had failed as men.",
+                "score": 0.997718095779419,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Almost unbelievably, the writers point out, Tate had essentially persuaded 100 men to pay him $5,000 each for a choice between being beaten to a pulp or publicly humiliated.",
+                "score": 0.9962195754051208,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Shame, it turns out, is a hell of a drug for men and women, and those who can monetise it are laughing all the way to the bank.",
+                "score": 0.9982122182846069,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "But TikTok is still full of wannabes flexing about their Rolexes and supercars and hot model girlfriends, scornfully telling followers that wealth is a mindset and so if theyre broke, theyre losers.",
+                "score": 0.9977942705154419,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Far-right political movements have learned to use the language of the manosphere to recruit new gen Z supporters, while a darker version of the core idea that being a man is about ostentatious wealth and status  backed up by a willingness to use violence and an obsession with never losing face  has long underpinned gang culture.",
+                "score": 0.9978873133659363,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "Parents, meanwhile, need to find ways of talking not just about how toxic masculinity hurts girls  though of course it does  but about how it hurts boys own life chances, too.",
+                "score": 0.9982677698135376,
+                "label": "PROPAGANDA"
+            },
+            {
+                "sentence": "We tell our teenage daughters not to beat themselves up for not fitting some ridiculously outdated mould.",
+                "score": 0.9981690645217896,
+                "label": "PROPAGANDA"
+            }
+        ],
+        "final_score": 15.0,
+        "date": "2024-10-31 02:52:01",
+        "email": "dazgoop1@gmail.com"
+    },
+    {
+        "title": "Article",
+        "text": "Article Snippet: \"Over the past decade, the renewable energy sector has seen substantial growth in the United States, driven by advancements in technology and increased public and private investments. According to the Bureau of Labor Statistics, employment in solar and wind energy-related industries increased by over 20% between 2010 and 2020. The primary reasons for this growth include decreasing costs of solar panels and wind turbines, as well as a shift in policy incentives favoring clean energy solutions.",
+        "sentiment_score": 2.33,
+        "sentiment_label": "Negative",
+        "bias_score": 0,
+        "biased_sentences": [],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 33.25,
+        "date": "2024-10-31 02:52:36",
+        "email": "dazgoop1@gmail.com"
+    }
+]

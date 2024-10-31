@@ -1,0 +1,426 @@
+[
+    {
+        "title": "Article",
+        "text": "FX Articles 17 October 2024 FX Daily: Trumps spectre hangs over the FX market The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets. This may be hard to shake off given such a tight election. Today, the highlight is the ECB decision where we see upside risks to the euro. We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win. Most emerging currencies are under pressure. And you can see why. In an entertaining interview with Bloomberg on Tuesday, Trump went large on using tariffs should he make it back into the White House. As columnists have said, no one should be surprised if this happens. The most immediate casualty from that interview was the Mexican peso. When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself. He intends to use tariffs to ensure that will be the case. In addition, when it comes to broader tariffs  particularly on the European auto industry  Trump said that tariffs of 10% would not be enough. With the election less than three weeks away, it looks like investors will be reluctant to position against such threats even though the election outcome remains very uncertain. If you haven't seen it already, please have a look at our market scenario analysis for the US election. For the US today, the highlight will be the September US retail sales data and weekly jobless claims. Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data. Given the large weighting of the euro in the DXY, the DXY could dip back to 103.00/103.20 if we are right with our ECB/euro analysis today, but we suspect the dollar finds decent support on any dips now. Chris Turner EUR: Some upside risks today The market is pricing a 25bp ECB rate cut today with a 97% probability. We doubt the ECB will disappoint those expectations, but we see upside risks to the short end of the EUR rates curve today . This is because the market now virtually prices a 25bp rate cut at each of the next six meetings and we do not believe the ECB is ready to capitulate and support faster easing (some 50bp cuts) towards the neutral rate near 2.00/2.25% for the deposit rate. If we're right, EUR/USD could be due a corrective bounce to the 1.0900/0920 area, although such gains may prove temporary. Perhaps a cleaner story for euro strength today will be EUR/CHF. Here we feel EUR/CHF has very much been dragged around by short-dated EUR rates this year and the view that the Swiss National Bank has a floor for the policy rate at 0.50%. Higher short-dated EUR rates today could drag EUR/CHF possibly up to the 0.9480/9500 area. Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week. On top of global events today, we also have a Central Bank of Turkey meeting and important speakers in Hungary. First thing this morning there is a local conference in Budapest where the finance minister, who according to newspaper rumours is expected to become the next central bank governor, the minister for economy and the deputy governor of the National Bank of Hungary are all expected to speak. With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track. Later today we will see the Central Bank of Turkey decision. In line with expectations, we expect the rate to remain unchanged at 50%. September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness. Market expectations of a first cut are shifting from October/November to December/January, which is showing up in the forward pricing. However, the spot TRY market remains on the same trajectory, which is the main reason we prefer spot over forwards at the moment, collecting high carry. Thus, reassurance from the Central Bank of Turkey should only extend the window where TRY remains the currency of choice for markets, while TURKGBs rather remain on the sidelines, waiting for the first CBT rate cut. Frantisek Taborsky CLP:  Another 25bp cut today leaves the peso with little protection The fact that Chinese stimulus measures have yet to deliver a material re-rating in China's growth prospects is evidenced by the ongoing weakness in Chile's peso. This continues to trade towards the weak side of a four-month trading range. In focus much later today will be the central bank's policy decision. Economists are unanimous in expecting a 25bp cut to 5.25%. As discussed in this month's FX Talking , the real rate protection for the peso is starting to look very lean. Equally, the peso suffered greatly under Trump between 2018-19. We are fearful that the local central bank could be cutting rates too deeply and the peso starts to take the strain again  especially with the central bank having failed to rebuild FX reserves after a massive intervention campaign in 2022. Pressure is building for USD/CLP to push decisively through 950. Chris Turner Tags FX ECB Dollar Download Download article Share Twitter LinkedIn E-mail Copy link Share Authors Chris Turner Global Head of Markets and Regional Head of Research for UK & CEE Frantisek Taborsky EMEA FX & FI Strategist Francesco Pesole FX Strategist Content Disclaimer This publication has been prepared by ING solely for information purposes irrespective of a particular user's means, financial situation or investment objectives. The information does not constitute investment recommendation, and nor is it investment, legal or tax advice or an offer or solicitation to purchase or sell any financial instrument. Read more",
+        "sentiment_score": -0.0705,
+        "sentiment_label": "Negative",
+        "bias_score": 2,
+        "biased_sentences": [
+            {
+                "sentence": "For the US today, the highlight will be the September US retail sales data and weekly jobless claims.",
+                "detected_terms": [
+                    "claims"
+                ]
+            },
+            {
+                "sentence": "Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data.",
+                "detected_terms": [
+                    "claims"
+                ]
+            }
+        ],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 0,
+        "date": "2024-10-30 22:22:42",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 6.2379999999999995,
+        "date": "2024-10-30 22:23:04",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 6.2379999999999995,
+        "date": "2024-10-30 22:28:32",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 6.2379999999999995,
+        "date": "2024-10-30 22:31:01",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 6.2379999999999995,
+        "date": "2024-10-30 22:31:09",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 6.2379999999999995,
+        "date": "2024-10-30 22:37:02",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 3,
+        "propaganda_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "score": 0.9981227517127991
+            },
+            {
+                "sentence": "These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system.",
+                "score": 0.9981269240379333
+            },
+            {
+                "sentence": "How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+                "score": 0.997843861579895
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 22:39:52",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 3,
+        "propaganda_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "score": 0.9981227517127991
+            },
+            {
+                "sentence": "These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system.",
+                "score": 0.9981269240379333
+            },
+            {
+                "sentence": "How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+                "score": 0.997843861579895
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 22:39:54",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 3,
+        "propaganda_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "score": 0.9981227517127991
+            },
+            {
+                "sentence": "These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system.",
+                "score": 0.9981269240379333
+            },
+            {
+                "sentence": "How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+                "score": 0.997843861579895
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 22:39:56",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 3,
+        "propaganda_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "score": 0.9981227517127991
+            },
+            {
+                "sentence": "These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system.",
+                "score": 0.9981269240379333
+            },
+            {
+                "sentence": "How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+                "score": 0.997843861579895
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 22:50:02",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens. These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system. How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+        "sentiment_score": 0.4119,
+        "sentiment_label": "Positive",
+        "bias_score": 1,
+        "biased_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "detected_terms": [
+                    "illegal"
+                ]
+            }
+        ],
+        "propaganda_score": 3,
+        "propaganda_sentences": [
+            {
+                "sentence": "Every day, thousands of illegal immigrants flood our country, taking away hard-earned jobs from citizens.",
+                "score": 0.9981227517127991
+            },
+            {
+                "sentence": "These people, who dont respect our laws, not only threaten our safety but also drain our social welfare system.",
+                "score": 0.9981269240379333
+            },
+            {
+                "sentence": "How much more can our nation endure as these outsiders continue to weaken the very fabric of our society?",
+                "score": 0.997843861579895
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 22:50:05",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "The Corrupt Elite Are Destroying the Economy\"\nSnippet from the Article: \"The corrupt political elite are robbing the hardworking people of this country to fill their own pockets. They create policies that only benefit them and their friends, leaving the rest of us to suffer. Its time we take back our country from these greedy tyrants!\"",
+        "sentiment_score": -0.163,
+        "sentiment_label": "Negative",
+        "bias_score": 0,
+        "biased_sentences": [],
+        "propaganda_score": 3,
+        "propaganda_sentences": [
+            {
+                "sentence": "The Corrupt Elite Are Destroying the Economy\"\nSnippet from the Article: \"The corrupt political elite are robbing the hardworking people of this country to fill their own pockets.",
+                "score": 0.9982159733772278
+            },
+            {
+                "sentence": "They create policies that only benefit them and their friends, leaving the rest of us to suffer.",
+                "score": 0.9978761672973633
+            },
+            {
+                "sentence": "Its time we take back our country from these greedy tyrants!\"",
+                "score": 0.9984517097473145
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 22:55:08",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "Over the past decade, the renewable energy sector has seen substantial growth in the United States, driven by advancements in technology and increased public and private investments. According to the Bureau of Labor Statistics, employment in solar and wind energy-related industries increased by over 20% between 2010 and 2020. The primary reasons for this growth include decreasing costs of solar panels and wind turbines, as well as a shift in policy incentives favoring clean energy solutions.",
+        "sentiment_score": 0.187,
+        "sentiment_label": "Positive",
+        "bias_score": 0,
+        "biased_sentences": [],
+        "propaganda_score": 0,
+        "propaganda_sentences": [],
+        "final_score": 3.74,
+        "date": "2024-10-30 22:56:04",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "FX Articles 17 October 2024 FX Daily: Trumps spectre hangs over the FX market The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets. This may be hard to shake off given such a tight election. Today, the highlight is the ECB decision where we see upside risks to the euro. We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win. Most emerging currencies are under pressure. And you can see why. In an entertaining interview with Bloomberg on Tuesday, Trump went large on using tariffs should he make it back into the White House. As columnists have said, no one should be surprised if this happens. The most immediate casualty from that interview was the Mexican peso. When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself. He intends to use tariffs to ensure that will be the case. In addition, when it comes to broader tariffs  particularly on the European auto industry  Trump said that tariffs of 10% would not be enough. With the election less than three weeks away, it looks like investors will be reluctant to position against such threats even though the election outcome remains very uncertain. If you haven't seen it already, please have a look at our market scenario analysis for the US election. For the US today, the highlight will be the September US retail sales data and weekly jobless claims. Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data. Given the large weighting of the euro in the DXY, the DXY could dip back to 103.00/103.20 if we are right with our ECB/euro analysis today, but we suspect the dollar finds decent support on any dips now. Chris Turner EUR: Some upside risks today The market is pricing a 25bp ECB rate cut today with a 97% probability. We doubt the ECB will disappoint those expectations, but we see upside risks to the short end of the EUR rates curve today . This is because the market now virtually prices a 25bp rate cut at each of the next six meetings and we do not believe the ECB is ready to capitulate and support faster easing (some 50bp cuts) towards the neutral rate near 2.00/2.25% for the deposit rate. If we're right, EUR/USD could be due a corrective bounce to the 1.0900/0920 area, although such gains may prove temporary. Perhaps a cleaner story for euro strength today will be EUR/CHF. Here we feel EUR/CHF has very much been dragged around by short-dated EUR rates this year and the view that the Swiss National Bank has a floor for the policy rate at 0.50%. Higher short-dated EUR rates today could drag EUR/CHF possibly up to the 0.9480/9500 area. Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week. On top of global events today, we also have a Central Bank of Turkey meeting and important speakers in Hungary. First thing this morning there is a local conference in Budapest where the finance minister, who according to newspaper rumours is expected to become the next central bank governor, the minister for economy and the deputy governor of the National Bank of Hungary are all expected to speak. With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track. Later today we will see the Central Bank of Turkey decision. In line with expectations, we expect the rate to remain unchanged at 50%. September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness. Market expectations of a first cut are shifting from October/November to December/January, which is showing up in the forward pricing. However, the spot TRY market remains on the same trajectory, which is the main reason we prefer spot over forwards at the moment, collecting high carry. Thus, reassurance from the Central Bank of Turkey should only extend the window where TRY remains the currency of choice for markets, while TURKGBs rather remain on the sidelines, waiting for the first CBT rate cut. Frantisek Taborsky CLP:  Another 25bp cut today leaves the peso with little protection The fact that Chinese stimulus measures have yet to deliver a material re-rating in China's growth prospects is evidenced by the ongoing weakness in Chile's peso. This continues to trade towards the weak side of a four-month trading range. In focus much later today will be the central bank's policy decision. Economists are unanimous in expecting a 25bp cut to 5.25%. As discussed in this month's FX Talking , the real rate protection for the peso is starting to look very lean. Equally, the peso suffered greatly under Trump between 2018-19. We are fearful that the local central bank could be cutting rates too deeply and the peso starts to take the strain again  especially with the central bank having failed to rebuild FX reserves after a massive intervention campaign in 2022. Pressure is building for USD/CLP to push decisively through 950. Chris Turner Tags FX ECB Dollar Download Download article Share Twitter LinkedIn E-mail Copy link Share Authors Chris Turner Global Head of Markets and Regional Head of Research for UK & CEE Frantisek Taborsky EMEA FX & FI Strategist Francesco Pesole FX Strategist Content Disclaimer This publication has been prepared by ING solely for information purposes irrespective of a particular user's means, financial situation or investment objectives. The information does not constitute investment recommendation, and nor is it investment, legal or tax advice or an offer or solicitation to purchase or sell any financial instrument. Read more",
+        "sentiment_score": -0.0705,
+        "sentiment_label": "Negative",
+        "bias_score": 2,
+        "biased_sentences": [
+            {
+                "sentence": "For the US today, the highlight will be the September US retail sales data and weekly jobless claims.",
+                "detected_terms": [
+                    "claims"
+                ]
+            },
+            {
+                "sentence": "Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data.",
+                "detected_terms": [
+                    "claims"
+                ]
+            }
+        ],
+        "propaganda_score": 5,
+        "propaganda_sentences": [
+            {
+                "sentence": "We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win.",
+                "score": 0.9972532391548157
+            },
+            {
+                "sentence": "When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself.",
+                "score": 0.98328697681427
+            },
+            {
+                "sentence": "Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week.",
+                "score": 0.9965960383415222
+            },
+            {
+                "sentence": "With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track.",
+                "score": 0.9807528853416443
+            },
+            {
+                "sentence": "September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness.",
+                "score": 0.9961084723472595
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 23:31:58",
+        "username": "GLAD0"
+    },
+    {
+        "title": "Article",
+        "text": "FX Articles 17 October 2024 FX Daily: Trumps spectre hangs over the FX market The dollar continues to firm and emerging currencies stay largely offered as the spectre of another possible Trump term of tariffs hangs over global FX markets. This may be hard to shake off given such a tight election. Today, the highlight is the ECB decision where we see upside risks to the euro. We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win. Most emerging currencies are under pressure. And you can see why. In an entertaining interview with Bloomberg on Tuesday, Trump went large on using tariffs should he make it back into the White House. As columnists have said, no one should be surprised if this happens. The most immediate casualty from that interview was the Mexican peso. When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself. He intends to use tariffs to ensure that will be the case. In addition, when it comes to broader tariffs  particularly on the European auto industry  Trump said that tariffs of 10% would not be enough. With the election less than three weeks away, it looks like investors will be reluctant to position against such threats even though the election outcome remains very uncertain. If you haven't seen it already, please have a look at our market scenario analysis for the US election. For the US today, the highlight will be the September US retail sales data and weekly jobless claims. Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data. Given the large weighting of the euro in the DXY, the DXY could dip back to 103.00/103.20 if we are right with our ECB/euro analysis today, but we suspect the dollar finds decent support on any dips now. Chris Turner EUR: Some upside risks today The market is pricing a 25bp ECB rate cut today with a 97% probability. We doubt the ECB will disappoint those expectations, but we see upside risks to the short end of the EUR rates curve today . This is because the market now virtually prices a 25bp rate cut at each of the next six meetings and we do not believe the ECB is ready to capitulate and support faster easing (some 50bp cuts) towards the neutral rate near 2.00/2.25% for the deposit rate. If we're right, EUR/USD could be due a corrective bounce to the 1.0900/0920 area, although such gains may prove temporary. Perhaps a cleaner story for euro strength today will be EUR/CHF. Here we feel EUR/CHF has very much been dragged around by short-dated EUR rates this year and the view that the Swiss National Bank has a floor for the policy rate at 0.50%. Higher short-dated EUR rates today could drag EUR/CHF possibly up to the 0.9480/9500 area. Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week. On top of global events today, we also have a Central Bank of Turkey meeting and important speakers in Hungary. First thing this morning there is a local conference in Budapest where the finance minister, who according to newspaper rumours is expected to become the next central bank governor, the minister for economy and the deputy governor of the National Bank of Hungary are all expected to speak. With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track. Later today we will see the Central Bank of Turkey decision. In line with expectations, we expect the rate to remain unchanged at 50%. September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness. Market expectations of a first cut are shifting from October/November to December/January, which is showing up in the forward pricing. However, the spot TRY market remains on the same trajectory, which is the main reason we prefer spot over forwards at the moment, collecting high carry. Thus, reassurance from the Central Bank of Turkey should only extend the window where TRY remains the currency of choice for markets, while TURKGBs rather remain on the sidelines, waiting for the first CBT rate cut. Frantisek Taborsky CLP:  Another 25bp cut today leaves the peso with little protection The fact that Chinese stimulus measures have yet to deliver a material re-rating in China's growth prospects is evidenced by the ongoing weakness in Chile's peso. This continues to trade towards the weak side of a four-month trading range. In focus much later today will be the central bank's policy decision. Economists are unanimous in expecting a 25bp cut to 5.25%. As discussed in this month's FX Talking , the real rate protection for the peso is starting to look very lean. Equally, the peso suffered greatly under Trump between 2018-19. We are fearful that the local central bank could be cutting rates too deeply and the peso starts to take the strain again  especially with the central bank having failed to rebuild FX reserves after a massive intervention campaign in 2022. Pressure is building for USD/CLP to push decisively through 950. Chris Turner Tags FX ECB Dollar Download Download article Share Twitter LinkedIn E-mail Copy link Share Authors Chris Turner Global Head of Markets and Regional Head of Research for UK & CEE Frantisek Taborsky EMEA FX & FI Strategist Francesco Pesole FX Strategist Content Disclaimer This publication has been prepared by ING solely for information purposes irrespective of a particular user's means, financial situation or investment objectives. The information does not constitute investment recommendation, and nor is it investment, legal or tax advice or an offer or solicitation to purchase or sell any financial instrument. Read more",
+        "sentiment_score": 2.68,
+        "sentiment_label": "Neutral",
+        "bias_score": 2,
+        "biased_sentences": [
+            {
+                "sentence": "For the US today, the highlight will be the September US retail sales data and weekly jobless claims.",
+                "detected_terms": [
+                    "claims"
+                ]
+            },
+            {
+                "sentence": "Retail sales are expected to remain reasonable, with the control group at 0.3% MoM. Weekly initial claims are expected to remain high at 258,000, but uncertainty about the impact of Hurricane Helene and the port strike will prevent the market from overreacting to this data.",
+                "detected_terms": [
+                    "claims"
+                ]
+            }
+        ],
+        "propaganda_score": 5,
+        "propaganda_sentences": [
+            {
+                "sentence": "We also have US retail sales and a Turkish rate decision Authors Chris Turner Frantisek Taborsky Francesco Pesole Trump speaks with the Bloomberg editor-in-chief during an appearance with the Economic Club of Chicago this week In this article USD: 'Tariff is the most beautiful word' EUR: Some upside risks today CEE: Central bankers will give the market the desired hawkishness CLP:  Another 25bp cut today leaves the peso with little protection USD: 'Tariff is the most beautiful word' Looking across global FX markets, one could be forgiven for thinking that the market is starting to position for a Donald Trump win.",
+                "score": 0.9972532391548157
+            },
+            {
+                "sentence": "When it comes to nearshoring, Donald Trump wants US corporates to shorten supply chains not just into Mexico, but into the US itself.",
+                "score": 0.98328697681427
+            },
+            {
+                "sentence": "Chris Turner CEE: Central bankers will give the market the desired hawkishness Thursday seems to be the highlight of the week.",
+                "score": 0.9965960383415222
+            },
+            {
+                "sentence": "With EUR/HUF levels above 400, we believe the speakers will have more attention than usual and we are likely to hear hawkish news from central bankers that could help the HUF get back on track.",
+                "score": 0.9807528853416443
+            },
+            {
+                "sentence": "September inflation numbers surprised to the upside and the market is expecting an additional dose of hawkishness.",
+                "score": 0.9961084723472595
+            }
+        ],
+        "final_score": 0,
+        "date": "2024-10-30 23:53:37",
+        "username": "GLAD0"
+    }
+]
