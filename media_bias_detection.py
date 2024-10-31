@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 def install_spacy_model(model_name):
     try:
         spacy.load(model_name)
+        logger.info(f"SpaCy model '{model_name}' is already installed.")
     except OSError:
         logger.info(f"Downloading SpaCy model: {model_name}")
         subprocess.check_call([sys.executable, "-m", "spacy", "download", model_name])
@@ -1045,6 +1046,10 @@ def main():
         st.session_state['email'] = ''
     if 'bias_terms' not in st.session_state:
         st.session_state['bias_terms'] = load_default_bias_terms()
+
+    # Display Python version (for debugging purposes)
+    python_version = sys.version.split(' ')[0]
+    st.sidebar.markdown(f"**Python Version:** {python_version}")
 
     # Sidebar Navigation
     st.sidebar.title("Media Bias Detection Tool")
