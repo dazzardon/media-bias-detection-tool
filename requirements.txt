@@ -12,3 +12,4 @@ scikit-learn
 numpy
 aiohttp
 bcrypt
+wheel
