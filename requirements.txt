@@ -1,5 +1,6 @@
 streamlit
 spacy==3.2.4
+thinc==8.0.4
 transformers
 torch==1.12.1
 pandas
@@ -10,5 +11,4 @@ sentencepiece
 scikit-learn
 numpy
 aiohttp
-streamlit-authenticator
-PyYAML
+bcrypt
