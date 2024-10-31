@@ -1,8 +1,8 @@
 streamlit
-spacy==3.5.2        # Compatible with Python 3.10+
-thinc==8.1.0        # Updated for better Python 3.10+ compatibility
-transformers==4.30.0  # Ensure compatibility with recent Python versions
-torch==2.0.1        # Choose a recent compatible version
+spacy==3.5.2        # Ensure compatibility with recent Thinc versions
+thinc==8.1.8        # Compatible with spaCy 3.5.2
+transformers==4.30.0  # Recent version for Python 3.10+
+torch==2.0.1        # Compatible with Python 3.10+
 pandas
 plotly
 requests
