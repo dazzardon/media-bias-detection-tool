@@ -1,8 +1,9 @@
 streamlit
-spacy>=3.5.2
-thinc>=8.1.8
+spacy==3.2.4
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.2.0/en_core_web_sm-3.2.0.tar.gz
+thinc==8.0.4
 transformers
-torch>=2.0
+torch>=1.12.1
 pandas
 plotly
 requests
