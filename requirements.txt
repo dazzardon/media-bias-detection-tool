@@ -1,6 +1,6 @@
 streamlit
 spacy==3.2.0
-spacy-model-en_core_web_sm==3.2.0
+en-core-web-sm==3.2.0
 transformers
 torch==1.12.1
 pandas
