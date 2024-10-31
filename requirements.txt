@@ -1,7 +1,7 @@
 streamlit
-spacy==3.5.3
-spacy-model-en_core_web_sm==3.5.0
-transformers==4.28.1
+spacy==3.2.0
+spacy-model-en_core_web_sm==3.2.0
+transformers
 torch==1.12.1
 pandas
 plotly
