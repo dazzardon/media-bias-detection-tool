@@ -4,6 +4,8 @@ import sqlite3
 import bcrypt
 from pathlib import Path
 import logging
+import os
+import json
 
 # --- Configure Logging ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -15,7 +17,7 @@ DB_PATH = Path("users.db")
 def get_connection():
     """
     Establishes a connection to the SQLite database.
-    Creates the users table if it doesn't exist.
+    Creates the users table if it doesn't exist with the correct schema.
     """
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -144,8 +146,27 @@ def load_default_bias_terms():
     bias_terms = [
         'always', 'never', 'obviously', 'clearly', 'undoubtedly', 'unquestionably',
         'everyone knows', 'no one believes', 'definitely', 'certainly', 'extremely',
-        'inconceivable', 'must', 'prove', 'disprove', 'true', 'false'
+        'inconceivable', 'must', 'prove', 'disprove', 'true', 'false',
+        'alarming', 'allegations', 'unfit', 'aggressive', 'alleged',
+        'apparently', 'arguably', 'claims', 'controversial', 'disputed',
+        'insists', 'questionable', 'reportedly', 'rumored', 'suggests',
+        'supposedly', 'unconfirmed', 'suspected', 'reckless', 'radical',
+        'extremist', 'biased', 'manipulative', 'deceptive', 'unbelievable',
+        'incredible', 'shocking', 'outrageous', 'bizarre', 'absurd',
+        'ridiculous', 'disgraceful', 'disgusting', 'horrible', 'terrible',
+        'unacceptable', 'unfair', 'scandalous', 'suspicious', 'illegal',
+        'illegitimate', 'immoral', 'corrupt', 'criminal', 'dangerous',
+        'threatening', 'harmful', 'menacing', 'disturbing', 'distressing',
+        'troubling', 'fearful', 'afraid', 'panic', 'terror', 'catastrophe',
+        'disaster', 'chaos', 'crisis', 'collapse', 'failure', 'ruin',
+        'devastation', 'suffering', 'misery', 'pain', 'dreadful', 'awful',
+        'nasty', 'vile', 'vicious', 'brutal', 'violent', 'greedy',
+        'selfish', 'arrogant', 'ignorant', 'stupid', 'unwise', 'illogical',
+        'unreasonable', 'delusional', 'paranoid', 'obsessed', 'fanatical',
+        'zealous', 'militant', 'dictator', 'regime'
     ]
+    # Remove duplicates and convert to lowercase
+    bias_terms = list(set([term.lower() for term in bias_terms]))
     return bias_terms
 
 def save_analysis_to_history(data):
