@@ -60,19 +60,20 @@ try:
         with tarfile.open(MODEL_PATH, "r:gz") as tar:
             tar.extractall(path=Path(__file__).parent / "models")
             logger.info(f"Extracted spaCy model to {Path(__file__).parent / 'models'}.")
-        
-        # Determine the name of the extracted directory (e.g., en_core_web_sm-3.5.0)
-        extracted_dirs = [member for member in tar.getmembers() if member.isdir()]
-        if extracted_dirs:
-            extracted_dir_name = Path(extracted_dirs[0].name).name  # Get the first directory name
-            extracted_dir = Path(__file__).parent / "models" / extracted_dir_name
             
-            # Rename the extracted directory to the expected name if necessary
-            if extracted_dir.exists() and extracted_dir != EXPECTED_MODEL_DIR:
-                extracted_dir.rename(EXPECTED_MODEL_DIR)
-                logger.info(f"Renamed '{extracted_dir}' to '{EXPECTED_MODEL_DIR}'.")
-        else:
-            raise FileNotFoundError("No directory found inside the tar.gz archive.")
+            # Determine the name of the extracted directory (e.g., en_core_web_sm-3.5.0)
+            extracted_dirs = [member for member in tar.getmembers() if member.isdir()]
+            if extracted_dirs:
+                # Assuming the first directory is the model directory
+                extracted_dir_name = Path(extracted_dirs[0].name).name
+                extracted_dir = Path(__file__).parent / "models" / extracted_dir_name
+                
+                # Rename the extracted directory to the expected name if necessary
+                if extracted_dir.exists() and extracted_dir != EXPECTED_MODEL_DIR:
+                    extracted_dir.rename(EXPECTED_MODEL_DIR)
+                    logger.info(f"Renamed '{extracted_dir}' to '{EXPECTED_MODEL_DIR}'.")
+            else:
+                raise FileNotFoundError("No directory found inside the tar.gz archive.")
         
         # Load the spaCy model after extraction and renaming
         if EXPECTED_MODEL_DIR.exists():
