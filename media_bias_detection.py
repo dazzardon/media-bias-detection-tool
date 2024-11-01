@@ -15,8 +15,6 @@ from urllib.parse import urlparse
 import re
 import unicodedata
 import ssl
-import subprocess
-import sys
 import plotly.express as px
 
 # Import user management functions
@@ -40,44 +38,35 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Function to Install SpaCy Model ---
-def install_spacy_model(model_name):
-    try:
-        spacy.load(model_name)
-    except OSError:
-        logger.info(f"Downloading SpaCy model: {model_name}")
-        subprocess.check_call([sys.executable, "-m", "spacy", "download", model_name])
-
-# Specify the SpaCy model you want to use
-SPACY_MODEL = "en_core_web_sm"
-
-# Ensure the model is installed
-install_spacy_model(SPACY_MODEL)
-
 # --- Initialize Models ---
 @st.cache_resource
 def initialize_models():
-    # Initialize Sentiment Analysis Model
-    sentiment_pipeline_model = pipeline(
-        "sentiment-analysis",
-        model="nlptown/bert-base-multilingual-uncased-sentiment",
-        device=-1  # Use CPU
-    )
-    # Initialize Propaganda Detection Model
-    propaganda_pipeline_model = pipeline(
-        "text-classification",
-        model="IDA-SERICS/PropagandaDetection",
-        device=-1  # Use CPU
-    )
-    # Initialize SpaCy NLP Model
-    nlp = spacy.load(SPACY_MODEL)
+    try:
+        # Initialize Sentiment Analysis Model
+        sentiment_pipeline_model = pipeline(
+            "sentiment-analysis",
+            model="nlptown/bert-base-multilingual-uncased-sentiment",
+            device=-1  # Use CPU
+        )
+        # Initialize Propaganda Detection Model
+        propaganda_pipeline_model = pipeline(
+            "text-classification",
+            model="IDA-SERICS/PropagandaDetection",
+            device=-1  # Use CPU
+        )
+        # Initialize SpaCy NLP Model
+        nlp = spacy.load("en_core_web_sm")
 
-    models = {
-        'sentiment_pipeline': sentiment_pipeline_model,
-        'propaganda_pipeline': propaganda_pipeline_model,
-        'nlp': nlp
-    }
-    return models
+        models = {
+            'sentiment_pipeline': sentiment_pipeline_model,
+            'propaganda_pipeline': propaganda_pipeline_model,
+            'nlp': nlp
+        }
+        return models
+    except Exception as e:
+        logger.error(f"Error initializing models: {e}")
+        st.error("Failed to initialize NLP models. Please check the logs for more details.")
+        return None
 
 # --- Helper Functions ---
 
@@ -259,6 +248,10 @@ def logout_user():
 
 def perform_analysis(text, title="Article"):
     models = initialize_models()
+    if models is None:
+        st.error("NLP models are not initialized. Cannot perform analysis.")
+        return None
+
     sentiment_pipeline = models['sentiment_pipeline']
     propaganda_pipeline = models['propaganda_pipeline']
     nlp = models['nlp']
@@ -300,7 +293,7 @@ def perform_analysis(text, title="Article"):
 
 def display_results(data, is_nested=False):
     st.subheader(f"Analysis Results for: {data['title']}")
-    
+
     # Sentiment Analysis
     st.markdown("### Sentiment Analysis")
     sentiment = data['sentiment'][0]
@@ -333,14 +326,14 @@ def display_results(data, is_nested=False):
     st.markdown("### Visualizations")
 
     # Sentiment Pie Chart
-    sentiment_labels = [data['sentiment'][0]['label']]
-    sentiment_values = [data['sentiment'][0]['score']]
+    sentiment_labels = [sentiment['label']]
+    sentiment_values = [sentiment['score']]
     fig_sentiment = px.pie(names=sentiment_labels, values=sentiment_values, title='Sentiment Distribution')
     st.plotly_chart(fig_sentiment)
 
     # Propaganda Bar Chart
-    propaganda_labels = [data['propaganda'][0]['label']]
-    propaganda_values = [data['propaganda'][0]['score']]
+    propaganda_labels = [propaganda['label']]
+    propaganda_values = [propaganda['score']]
     fig_propaganda = px.bar(x=propaganda_labels, y=propaganda_values, title='Propaganda Detection Score')
     st.plotly_chart(fig_propaganda)
 
@@ -411,7 +404,8 @@ def single_article_analysis():
             if article_text:
                 with st.spinner("Performing analysis..."):
                     analysis = perform_analysis(article_text, title=title)
-                display_results(analysis)
+                if analysis:
+                    display_results(analysis)
 
 # --- Comparative Analysis Function ---
 
@@ -453,8 +447,10 @@ def comparative_analysis():
                 with st.spinner("Performing analysis on all articles..."):
                     for text, title in zip(articles, titles):
                         analysis = perform_analysis(text, title=title)
-                        analyses.append(analysis)
-                display_comparative_results(analyses)
+                        if analysis:
+                            analyses.append(analysis)
+                if analyses:
+                    display_comparative_results(analyses)
             else:
                 st.error("No valid articles to analyze.")
 
