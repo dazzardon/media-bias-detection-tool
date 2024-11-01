@@ -43,23 +43,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Load SpaCy Model ---
-from pathlib import Path
-
-# Define the path to the local spaCy model
-MODEL_DIR = Path(__file__).parent / "models" / "en_core_web_sm"
+# Define the path to the local spaCy model directory or tar.gz file
+MODEL_PATH = Path(__file__).parent / "models" / "en_core_web_sm-3.5.0.tar.gz"
+EXTRACTED_MODEL_DIR = MODEL_PATH.parent / "en_core_web_sm"
 
 try:
-    # Attempt to load the spaCy model from the local path
-    nlp = spacy.load(MODEL_DIR)
-    logger.info(f"SpaCy model loaded successfully from {MODEL_DIR}.")
-except OSError as e:
-    logger.error(f"Failed to load SpaCy model from {MODEL_DIR}: {e}")
-    st.error(f"Failed to load SpaCy model from {MODEL_DIR}. Ensure the model directory is correctly placed.")
-    st.stop()
-except ImportError as e:
-    logger.error(f"ImportError: {e}")
-    st.error("An ImportError occurred. Please ensure all required packages are installed correctly.")
+    # Check if the model directory already exists
+    if EXTRACTED_MODEL_DIR.exists():
+        nlp = spacy.load(EXTRACTED_MODEL_DIR)
+        logger.info(f"SpaCy model loaded successfully from {EXTRACTED_MODEL_DIR}.")
+    else:
+        # Extract the tar.gz file if the directory doesn't exist
+        import tarfile
+        with tarfile.open(MODEL_PATH, "r:gz") as tar:
+            tar.extractall(path=EXTRACTED_MODEL_DIR)
+            logger.info(f"Extracted spaCy model to {EXTRACTED_MODEL_DIR}.")
+        # Load the model after extraction
+        nlp = spacy.load(EXTRACTED_MODEL_DIR)
+        logger.info("SpaCy model loaded successfully after extraction.")
+except (OSError, ImportError) as e:
+    logger.error(f"Failed to load SpaCy model from {MODEL_PATH}: {e}")
+    st.error(f"Failed to load SpaCy model from {MODEL_PATH}. Ensure the model is correctly placed and compatible.")
     st.stop()
 
 
