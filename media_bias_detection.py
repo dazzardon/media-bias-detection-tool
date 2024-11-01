@@ -1,4 +1,4 @@
-# app.py
+# media_bias_detection.py
 
 import streamlit as st
 import logging
@@ -17,31 +17,21 @@ import unicodedata
 import ssl
 import sqlite3
 import bcrypt
-import subprocess
 import sys
 
 # --- Configure Logging ---
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.FileHandler('app.log'), logging.StreamHandler()]
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 logger = logging.getLogger(__name__)
 
-# --- Function to Install SpaCy Model ---
-def install_spacy_model(model_name):
-    try:
-        spacy.load(model_name)
-        logger.info(f"SpaCy model '{model_name}' is already installed.")
-    except OSError:
-        logger.info(f"Downloading SpaCy model: {model_name}")
-        subprocess.check_call([sys.executable, "-m", "spacy", "download", model_name])
-
-# Specify the SpaCy model you want to use
-SPACY_MODEL = "en_core_web_sm"
-
-# Ensure the model is installed
-install_spacy_model(SPACY_MODEL)
+# --- Function to Install SpaCy Model via pip (No Longer Needed) ---
+# Removed because the model is now installed via requirements.txt
 
 # --- Database Setup ---
 DB_PATH = "users.db"
@@ -184,8 +174,14 @@ def initialize_models():
         device=-1  # Use CPU
     )
     # Initialize SpaCy NLP Model
-    nlp = spacy.load(SPACY_MODEL)
-
+    try:
+        nlp = spacy.load("en_core_web_sm")
+        logger.info("SpaCy model 'en_core_web_sm' loaded successfully.")
+    except Exception as e:
+        logger.error(f"Failed to load SpaCy model: {e}")
+        st.error("Failed to load SpaCy model. Ensure it is installed correctly via pip.")
+        st.stop()
+    
     models = {
         'sentiment_pipeline': sentiment_pipeline_model,
         'propaganda_pipeline': propaganda_pipeline_model,
@@ -678,7 +674,7 @@ def display_results(data, is_nested=False):
         # --- Propaganda Detection Tab ---
         with tabs[2]:
             st.markdown("### Propaganda Detection")
-            st.write(f"**Propaganda Count:** {int(propaganda_count)} propaganda sentences detected.")
+            st.write(f"**Propaganda Count:** {int(pregaganda_count)} propaganda sentences detected.")
 
             if data.get('propaganda_sentences'):
                 for idx, item in enumerate(data['propaganda_sentences'], 1):
