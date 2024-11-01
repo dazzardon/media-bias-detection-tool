@@ -310,19 +310,19 @@ def perform_analysis(text, title="Article"):
 
 def display_results(data, is_nested=False):
     st.subheader(f"Analysis Results for: {data['title']}")
-
+    
     # Sentiment Analysis
     st.markdown("### Sentiment Analysis")
     sentiment = data['sentiment'][0]
     st.write(f"**Label:** {sentiment['label']}")
     st.write(f"**Score:** {sentiment['score']:.2f}")
-
+    
     # Propaganda Detection
     st.markdown("### Propaganda Detection")
     propaganda = data['propaganda'][0]
     st.write(f"**Label:** {propaganda['label']}")
     st.write(f"**Score:** {propaganda['score']:.2f}")
-
+    
     # Named Entities
     st.markdown("### Named Entities")
     if data['entities']:
@@ -330,7 +330,7 @@ def display_results(data, is_nested=False):
         st.dataframe(entities_df)
     else:
         st.write("No named entities found.")
-
+    
     # Bias Terms
     st.markdown("### Detected Bias Terms")
     if data['bias_terms_found']:
@@ -338,16 +338,16 @@ def display_results(data, is_nested=False):
         st.write(f"**Bias Terms Found:** {bias_terms_str}")
     else:
         st.write("No bias terms detected.")
-
+    
     # Visualizations
     st.markdown("### Visualizations")
-
+    
     # Sentiment Pie Chart
     sentiment_labels = [sentiment['label']]
     sentiment_values = [sentiment['score']]
     fig_sentiment = px.pie(names=sentiment_labels, values=sentiment_values, title='Sentiment Distribution')
     st.plotly_chart(fig_sentiment)
-
+    
     # Propaganda Bar Chart
     propaganda_labels = [propaganda['label']]
     propaganda_values = [propaganda['score']]
@@ -356,7 +356,7 @@ def display_results(data, is_nested=False):
 
 def display_comparative_results(analyses):
     st.subheader("Comparative Analysis Results")
-
+    
     # Sentiment Comparison
     st.markdown("### Sentiment Comparison")
     sentiment_data = {}
@@ -368,7 +368,7 @@ def display_comparative_results(analyses):
     fig_sentiment = px.bar(sentiment_df, x=sentiment_df.index, y='Sentiment Score',
                            title='Sentiment Comparison', labels={'x': 'Article', 'Sentiment Score': 'Score'})
     st.plotly_chart(fig_sentiment)
-
+    
     # Propaganda Comparison
     st.markdown("### Propaganda Comparison")
     propaganda_data = {}
@@ -380,7 +380,7 @@ def display_comparative_results(analyses):
     fig_propaganda = px.bar(propaganda_df, x=propaganda_df.index, y='Propaganda Score',
                             title='Propaganda Detection Comparison', labels={'x': 'Article', 'Propaganda Score': 'Score'})
     st.plotly_chart(fig_propaganda)
-
+    
     # Bias Terms Comparison
     st.markdown("### Bias Terms Comparison")
     bias_data = {}
