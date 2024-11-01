@@ -14,3 +14,4 @@ numpy==1.23.1
 aiohttp==3.8.1
 bcrypt==3.2.2
 wheel==0.37.1
+pip>=24.3.1
