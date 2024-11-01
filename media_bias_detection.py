@@ -50,18 +50,10 @@ try:
     # Attempt to load the spaCy model
     nlp = spacy.load(SPACY_MODEL)
     logger.info(f"SpaCy model '{SPACY_MODEL}' loaded successfully.")
-except OSError:
-    logger.warning(f"SpaCy model '{SPACY_MODEL}' not found. Attempting to download...")
-    try:
-        # Try downloading the model if not present
-        import subprocess
-        subprocess.run([sys.executable, "-m", "spacy", "download", SPACY_MODEL], check=True)
-        nlp = spacy.load(SPACY_MODEL)
-        logger.info(f"SpaCy model '{SPACY_MODEL}' downloaded and loaded successfully.")
-    except Exception as e:
-        logger.error(f"Failed to download and load SpaCy model '{SPACY_MODEL}': {e}")
-        st.error(f"Failed to download and load the SpaCy model '{SPACY_MODEL}'. Please ensure that the model is available and compatible.")
-        st.stop()
+except OSError as e:
+    logger.error(f"Failed to load SpaCy model '{SPACY_MODEL}': {e}")
+    st.error(f"Failed to load the SpaCy model '{SPACY_MODEL}'. Please ensure that the model is installed correctly.")
+    st.stop()
 except ImportError as e:
     logger.error(f"ImportError: {e}")
     st.error("An ImportError occurred. Please ensure all required packages are installed correctly.")
@@ -387,7 +379,7 @@ def display_results(data, is_nested=False):
         # --- Propaganda Detection Tab ---
         with tabs[2]:
             st.markdown("### Propaganda Detection")
-            st.write(f"**Propaganda Count:** {int(propaganda_count)} propaganda sentences detected.")
+            st.write(f"**Propaganda Count:** {int(pregaganda_count)} propaganda sentences detected.")
 
             if data.get('propaganda_sentences'):
                 for idx, item in enumerate(data['propaganda_sentences'], 1):
