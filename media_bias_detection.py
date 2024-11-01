@@ -17,7 +17,7 @@ import ssl
 import sqlite3
 import bcrypt
 import sys
-from pathlib import Path  # Added import for Path
+from pathlib import Path  # Import Path from pathlib
 
 # Import spaCy
 import spacy
@@ -42,30 +42,48 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Define the path to the local spaCy model directory or tar.gz file
+# Define the path to the local spaCy model tar.gz file
 MODEL_PATH = Path(__file__).parent / "models" / "en_core_web_sm-3.5.0.tar.gz"
-EXTRACTED_MODEL_DIR = MODEL_PATH.parent / "en_core_web_sm"
+
+# Define the expected extracted model directory
+EXPECTED_MODEL_DIR = Path(__file__).parent / "models" / "en_core_web_sm"
 
 try:
-    # Check if the model directory already exists
-    if EXTRACTED_MODEL_DIR.exists():
-        nlp = spacy.load(EXTRACTED_MODEL_DIR)
-        logger.info(f"SpaCy model loaded successfully from {EXTRACTED_MODEL_DIR}.")
+    # Check if the extracted model directory already exists
+    if EXPECTED_MODEL_DIR.exists():
+        # Load the spaCy model from the extracted directory
+        nlp = spacy.load(EXPECTED_MODEL_DIR)
+        logger.info(f"SpaCy model loaded successfully from {EXPECTED_MODEL_DIR}.")
     else:
-        # Extract the tar.gz file if the directory doesn't exist
+        # Extract the tar.gz file if the model directory doesn't exist
         import tarfile
         with tarfile.open(MODEL_PATH, "r:gz") as tar:
-            tar.extractall(path=EXTRACTED_MODEL_DIR.parent)
-            logger.info(f"Extracted spaCy model to {EXTRACTED_MODEL_DIR.parent}.")
-        # Load the model after extraction
-        nlp = spacy.load(EXTRACTED_MODEL_DIR)
-        logger.info("SpaCy model loaded successfully after extraction.")
-except (OSError, ImportError) as e:
+            tar.extractall(path=Path(__file__).parent / "models")
+            logger.info(f"Extracted spaCy model to {Path(__file__).parent / 'models'}.")
+        
+        # Determine the name of the extracted directory (e.g., en_core_web_sm-3.5.0)
+        extracted_dirs = [member for member in tar.getmembers() if member.isdir()]
+        if extracted_dirs:
+            extracted_dir_name = Path(extracted_dirs[0].name).name  # Get the first directory name
+            extracted_dir = Path(__file__).parent / "models" / extracted_dir_name
+            
+            # Rename the extracted directory to the expected name if necessary
+            if extracted_dir.exists() and extracted_dir != EXPECTED_MODEL_DIR:
+                extracted_dir.rename(EXPECTED_MODEL_DIR)
+                logger.info(f"Renamed '{extracted_dir}' to '{EXPECTED_MODEL_DIR}'.")
+        else:
+            raise FileNotFoundError("No directory found inside the tar.gz archive.")
+        
+        # Load the spaCy model after extraction and renaming
+        if EXPECTED_MODEL_DIR.exists():
+            nlp = spacy.load(EXPECTED_MODEL_DIR)
+            logger.info("SpaCy model loaded successfully after extraction and renaming.")
+        else:
+            raise FileNotFoundError(f"Expected extracted model directory '{EXPECTED_MODEL_DIR}' not found.")
+except (OSError, ImportError, FileNotFoundError) as e:
     logger.error(f"Failed to load SpaCy model from {MODEL_PATH}: {e}")
     st.error(f"Failed to load SpaCy model from {MODEL_PATH}. Ensure the model is correctly placed and compatible.")
     st.stop()
-
-
 
 # --- Initialize Models ---
 @st.cache_resource
@@ -89,6 +107,7 @@ def initialize_models():
         'nlp': nlp
     }
     return models
+
 
 # --- Helper Functions ---
 
