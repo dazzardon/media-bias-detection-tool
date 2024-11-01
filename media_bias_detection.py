@@ -1,3 +1,5 @@
+# media_bias_detection.py
+
 import streamlit as st
 import logging
 import datetime
@@ -16,8 +18,8 @@ import sqlite3
 import bcrypt
 import sys
 
-# Import the spaCy model directly
-import en_core_web_sm
+# Import spaCy
+import spacy
 
 # Import user utilities
 from user_utils import (
@@ -45,7 +47,7 @@ logger = logging.getLogger(__name__)
 SPACY_MODEL = "en_core_web_sm"
 
 try:
-    nlp = en_core_web_sm.load()
+    nlp = spacy.load(SPACY_MODEL)
     logger.info(f"SpaCy model '{SPACY_MODEL}' loaded successfully.")
 except Exception as e:
     logger.error(f"Failed to load SpaCy model '{SPACY_MODEL}': {e}")
@@ -145,6 +147,15 @@ def preprocess_text(text):
     text = text.encode('ascii', 'ignore').decode('ascii')
     # Additional cleaning steps can be added here
     return text
+
+def load_default_bias_terms():
+    # Default bias terms
+    bias_terms = [
+        'always', 'never', 'obviously', 'clearly', 'undoubtedly', 'unquestionably',
+        'everyone knows', 'no one believes', 'definitely', 'certainly', 'extremely',
+        'inconceivable', 'must', 'prove', 'disprove', 'true', 'false'
+    ]
+    return bias_terms
 
 def save_analysis_to_history(data):
     email = st.session_state.get('email', 'guest')
