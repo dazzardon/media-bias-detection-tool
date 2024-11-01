@@ -13,3 +13,4 @@ numpy
 aiohttp
 bcrypt
 wheel
+en-core-web-sm==3.5.0
