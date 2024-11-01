@@ -1,16 +1,15 @@
 streamlit
-spacy==3.3.1
-thinc==8.0.15
+spacy>=3.5.2,<3.6.0
+thinc>=8.1.8,<8.2.0
 transformers
-torch>=2.0
+torch>=2.0,<2.1
 pandas
 plotly
 requests
 beautifulsoup4
 sentencepiece
 scikit-learn
-numpy
+numpy<1.26  # Add this to avoid issues with numpy 2.0
 aiohttp
 bcrypt
 wheel
-en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.3.0/en_core_web_sm-3.3.0.tar.gz
