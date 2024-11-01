@@ -42,49 +42,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Define the path to the local spaCy model tar.gz file
-MODEL_PATH = Path(__file__).parent / "models" / "en_core_web_sm-3.5.0.tar.gz"
-
-# Define the expected extracted model directory
-EXPECTED_MODEL_DIR = Path(__file__).parent / "models" / "en_core_web_sm"
-
+# Load the spaCy model directly
 try:
-    # Check if the extracted model directory already exists
-    if EXPECTED_MODEL_DIR.exists():
-        # Load the spaCy model from the extracted directory
-        nlp = spacy.load(EXPECTED_MODEL_DIR)
-        logger.info(f"SpaCy model loaded successfully from {EXPECTED_MODEL_DIR}.")
-    else:
-        # Extract the tar.gz file if the model directory doesn't exist
-        import tarfile
-        with tarfile.open(MODEL_PATH, "r:gz") as tar:
-            tar.extractall(path=Path(__file__).parent / "models")
-            logger.info(f"Extracted spaCy model to {Path(__file__).parent / 'models'}.")
-            
-            # Determine the name of the extracted directory (e.g., en_core_web_sm-3.5.0)
-            extracted_dirs = [member for member in tar.getmembers() if member.isdir()]
-            if extracted_dirs:
-                # Assuming the first directory is the model directory
-                extracted_dir_name = Path(extracted_dirs[0].name).name
-                extracted_dir = Path(__file__).parent / "models" / extracted_dir_name
-                
-                # Rename the extracted directory to the expected name if necessary
-                if extracted_dir.exists() and extracted_dir != EXPECTED_MODEL_DIR:
-                    extracted_dir.rename(EXPECTED_MODEL_DIR)
-                    logger.info(f"Renamed '{extracted_dir}' to '{EXPECTED_MODEL_DIR}'.")
-            else:
-                raise FileNotFoundError("No directory found inside the tar.gz archive.")
-        
-        # Load the spaCy model after extraction and renaming
-        if EXPECTED_MODEL_DIR.exists():
-            nlp = spacy.load(EXPECTED_MODEL_DIR)
-            logger.info("SpaCy model loaded successfully after extraction and renaming.")
-        else:
-            raise FileNotFoundError(f"Expected extracted model directory '{EXPECTED_MODEL_DIR}' not found.")
-except (OSError, ImportError, FileNotFoundError) as e:
-    logger.error(f"Failed to load SpaCy model from {MODEL_PATH}: {e}")
-    st.error(f"Failed to load SpaCy model from {MODEL_PATH}. Ensure the model is correctly placed and compatible.")
+    nlp = spacy.load("en_core_web_sm")
+    logger.info("SpaCy model 'en_core_web_sm' loaded successfully.")
+except (OSError, ImportError) as e:
+    logger.error(f"Failed to load SpaCy model 'en_core_web_sm': {e}")
+    st.error("Failed to load SpaCy model 'en_core_web_sm'. Ensure it is installed correctly.")
     st.stop()
+
 
 # --- Initialize Models ---
 @st.cache_resource
@@ -108,6 +74,7 @@ def initialize_models():
         'nlp': nlp
     }
     return models
+
 
 
 # --- Helper Functions ---
