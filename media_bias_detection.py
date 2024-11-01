@@ -1,58 +1,28 @@
-# media_bias_detection.py
-
-import streamlit as st
-import logging
-import datetime
-import os
-import json
-import pandas as pd
-from transformers import pipeline
-import aiohttp
-import asyncio
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-import re
-import unicodedata
-import ssl
-import sqlite3
-import bcrypt
-import sys
-
-# Import spaCy
-import spacy
-
-# Import user utilities
-from user_utils import (
-    create_user,
-    get_user,
-    verify_password,
-    reset_password,
-    load_default_bias_terms,
-    save_analysis_to_history,
-    load_user_history
-)
-
-# --- Configure Logging ---
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger(__name__)
-
 # --- Load SpaCy Model ---
 SPACY_MODEL = "en_core_web_sm"
 
 try:
+    # Attempt to load the spaCy model
     nlp = spacy.load(SPACY_MODEL)
     logger.info(f"SpaCy model '{SPACY_MODEL}' loaded successfully.")
-except Exception as e:
-    logger.error(f"Failed to load SpaCy model '{SPACY_MODEL}': {e}")
-    st.error(f"An error occurred while loading the SpaCy model '{SPACY_MODEL}'. Please check your installation.")
+except OSError:
+    logger.warning(f"SpaCy model '{SPACY_MODEL}' not found. Attempting to download...")
+    try:
+        # Try downloading the model if not present
+        import subprocess
+        import sys
+        subprocess.run([sys.executable, "-m", "spacy", "download", SPACY_MODEL], check=True)
+        nlp = spacy.load(SPACY_MODEL)
+        logger.info(f"SpaCy model '{SPACY_MODEL}' downloaded and loaded successfully.")
+    except Exception as e:
+        logger.error(f"Failed to download and load SpaCy model '{SPACY_MODEL}': {e}")
+        st.error(f"Failed to download and load the SpaCy model '{SPACY_MODEL}'. Please ensure that the model is available and compatible.")
+        st.stop()
+except ImportError as e:
+    logger.error(f"ImportError: {e}")
+    st.error("An ImportError occurred. Please ensure all required packages are installed correctly.")
     st.stop()
+
 
 # --- Initialize Models ---
 @st.cache_resource
