@@ -1,6 +1,6 @@
 streamlit
-spacy>=3.5.2
-thinc>=8.1.8
+spacy==3.3.1
+thinc==8.0.15
 transformers
 torch>=2.0
 pandas
@@ -13,5 +13,4 @@ numpy
 aiohttp
 bcrypt
 wheel
-en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0.tar.gz
-
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.3.0/en_core_web_sm-3.3.0.tar.gz
