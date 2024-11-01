@@ -29,6 +29,8 @@ from user_utils import (
 )
 
 import bcrypt
+import subprocess
+import sys
 
 # --- Configure Logging ---
 logging.basicConfig(
@@ -37,6 +39,21 @@ logging.basicConfig(
     handlers=[logging.FileHandler('app.log'), logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
+
+# --- Function to Install SpaCy Model ---
+def install_spacy_model(model_name="en_core_web_sm"):
+    """
+    Installs the specified SpaCy model if it's not already installed.
+    """
+    try:
+        spacy.load(model_name)
+    except OSError:
+        logger.info(f"Model {model_name} not found. Installing...")
+        subprocess.check_call([sys.executable, "-m", "spacy", "download", model_name])
+        logger.info(f"Model {model_name} installed successfully.")
+
+# --- Install the SpaCy model ---
+install_spacy_model()
 
 # --- Initialize Models ---
 @st.cache_resource
@@ -504,7 +521,6 @@ def help_feature():
 
     ### Support
     If you encounter any issues or have questions, please contact support at [support@example.com](mailto:support@example.com).
-
     """)
 
 # --- History Page Function ---
