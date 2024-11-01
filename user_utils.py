@@ -1,3 +1,5 @@
+# user_utils.py
+
 import sqlite3
 import bcrypt
 from pathlib import Path
@@ -35,47 +37,6 @@ def get_connection():
         logger.error(f"Error connecting to the database: {e}")
         return None
 
-def get_user(username):
-    """
-    Retrieves a user from the database by username.
-    Returns the user record if found, else None.
-    """
-    try:
-        conn = get_connection()
-        if conn is None:
-            return None
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE username = ?", (username,))
-        user = c.fetchone()
-        conn.close()
-        if user:
-            logger.info(f"User '{username}' retrieved successfully.")
-        else:
-            logger.info(f"User '{username}' not found.")
-        return user
-    except Exception as e:
-        logger.error(f"Error fetching user '{username}': {e}")
-        return None
-
-def get_all_users():
-    """
-    Retrieves all users from the database.
-    Returns a list of user records.
-    """
-    try:
-        conn = get_connection()
-        if conn is None:
-            return []
-        c = conn.cursor()
-        c.execute("SELECT * FROM users")
-        users = c.fetchall()
-        conn.close()
-        logger.info("All users retrieved successfully.")
-        return users
-    except Exception as e:
-        logger.error(f"Error fetching all users: {e}")
-        return []
-
 def create_user(username, name, email, password):
     """
     Creates a new user with the provided details.
@@ -107,6 +68,28 @@ def create_user(username, name, email, password):
     except Exception as e:
         logger.error(f"Error creating user '{username}': {e}")
         return False
+
+def get_user(username):
+    """
+    Retrieves a user from the database by username.
+    Returns the user record if found, else None.
+    """
+    try:
+        conn = get_connection()
+        if conn is None:
+            return None
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = c.fetchone()
+        conn.close()
+        if user:
+            logger.info(f"User '{username}' retrieved successfully.")
+        else:
+            logger.info(f"User '{username}' not found.")
+        return user
+    except Exception as e:
+        logger.error(f"Error fetching user '{username}': {e}")
+        return None
 
 def verify_password(username, password):
     """
@@ -153,3 +136,49 @@ def reset_password(username, new_password):
     except Exception as e:
         logger.error(f"Error resetting password for user '{username}': {e}")
         return False
+
+def load_default_bias_terms():
+    """
+    Returns the default list of bias terms.
+    """
+    bias_terms = [
+        'always', 'never', 'obviously', 'clearly', 'undoubtedly', 'unquestionably',
+        'everyone knows', 'no one believes', 'definitely', 'certainly', 'extremely',
+        'inconceivable', 'must', 'prove', 'disprove', 'true', 'false'
+    ]
+    return bias_terms
+
+def save_analysis_to_history(data):
+    """
+    Saves analysis data to a JSON file specific to the user's email.
+    """
+    email = data.get('email', 'guest')
+    history_file = f"{email}_history.json"
+    try:
+        if os.path.exists(history_file):
+            with open(history_file, 'r') as f:
+                history = json.load(f)
+        else:
+            history = []
+        history.append(data)
+        with open(history_file, 'w') as f:
+            json.dump(history, f, indent=4)
+        logger.info(f"Analysis saved to {history_file}.")
+    except Exception as e:
+        logger.error(f"Error saving analysis to history: {e}")
+
+def load_user_history(email):
+    """
+    Loads analysis history for a given user.
+    """
+    history_file = f"{email}_history.json"
+    try:
+        if os.path.exists(history_file):
+            with open(history_file, 'r') as f:
+                history = json.load(f)
+            return history
+        else:
+            return []
+    except Exception as e:
+        logger.error(f"Error loading user history: {e}")
+        return []
