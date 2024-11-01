@@ -44,20 +44,24 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- Load SpaCy Model ---
-SPACY_MODEL = "en_core_web_sm"
+from pathlib import Path
+
+# Define the path to the local spaCy model
+MODEL_DIR = Path(__file__).parent / "models" / "en_core_web_sm"
 
 try:
-    # Attempt to load the spaCy model
-    nlp = spacy.load(SPACY_MODEL)
-    logger.info(f"SpaCy model '{SPACY_MODEL}' loaded successfully.")
-except OSError:
-    logger.error(f"SpaCy model '{SPACY_MODEL}' not found. Ensure it is pre-installed and specified in 'requirements.txt'.")
-    st.error(f"Failed to load SpaCy model '{SPACY_MODEL}'. Please ensure the model is included in the environment.")
+    # Attempt to load the spaCy model from the local path
+    nlp = spacy.load(MODEL_DIR)
+    logger.info(f"SpaCy model loaded successfully from {MODEL_DIR}.")
+except OSError as e:
+    logger.error(f"Failed to load SpaCy model from {MODEL_DIR}: {e}")
+    st.error(f"Failed to load SpaCy model from {MODEL_DIR}. Ensure the model directory is correctly placed.")
     st.stop()
 except ImportError as e:
     logger.error(f"ImportError: {e}")
     st.error("An ImportError occurred. Please ensure all required packages are installed correctly.")
     st.stop()
+
 
 
 # --- Initialize Models ---
