@@ -2,68 +2,44 @@
 
 import streamlit as st
 import logging
-import datetime
 import os
-import json
-import pandas as pd
-from transformers import pipeline
-import aiohttp
-import asyncio
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-import re
-import unicodedata
-import ssl
-import sqlite3
-import bcrypt
-import sys
-from pathlib import Path  # Import Path from pathlib
-import tarfile  # For extracting the tar.gz file if needed
-
-# Import spaCy
+from pathlib import Path
+import tarfile
 import spacy
 
-# Import user utilities
-from user_utils import (
-    create_user,
-    get_user,
-    verify_password,
-    reset_password
-)
-
-# --- Configure Logging ---
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
+# Configure Logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Define the spaCy model path and extraction directory
+# Define Paths
 MODEL_TAR_PATH = Path("/mount/src/media-bias-detection-tool/models/en_core_web_sm-3.5.0.tar.gz")
 EXTRACTED_MODEL_DIR = Path("/mount/src/media-bias-detection-tool/models/en_core_web_sm")
 
-# Load the spaCy model directly or extract if needed
+# Model Loading and Extraction
 try:
-    # Attempt to load model if it's already extracted
-    if EXTRACTED_MODEL_DIR.exists():
-        nlp = spacy.load(EXTRACTED_MODEL_DIR)
-        logger.info("SpaCy model loaded successfully from extracted directory.")
-    else:
-        # Extract the model tar.gz file if the directory does not exist
+    # Check if the extracted model directory exists
+    if not EXTRACTED_MODEL_DIR.exists():
         with tarfile.open(MODEL_TAR_PATH, "r:gz") as tar:
-            tar.extractall(path=EXTRACTED_MODEL_DIR.parent)
-        logger.info(f"Extracted spaCy model to {EXTRACTED_MODEL_DIR}")
+            tar.extractall(path=EXTRACTED_MODEL_DIR.parent)  # Extract tar.gz into the models directory
+            logger.info(f"Extracted spaCy model to {EXTRACTED_MODEL_DIR}")
 
-        # Load the spaCy model after extraction
-        nlp = spacy.load(EXTRACTED_MODEL_DIR)
-        logger.info("SpaCy model loaded successfully after extraction.")
-except (OSError, ImportError, FileNotFoundError) as e:
+        # Check if the extracted folder has the version info in its name
+        extracted_dir = EXTRACTED_MODEL_DIR.parent / "en_core_web_sm-3.5.0"
+        if extracted_dir.exists():
+            # Rename the directory to match spaCy's loading requirements
+            os.rename(extracted_dir, EXTRACTED_MODEL_DIR)
+            logger.info(f"Renamed extracted model directory to {EXTRACTED_MODEL_DIR}")
+
+    # Verify files in extracted directory
+    logger.info(f"Files in {EXTRACTED_MODEL_DIR}: {list(EXTRACTED_MODEL_DIR.iterdir())}")
+
+    # Load the spaCy model
+    nlp = spacy.load(EXTRACTED_MODEL_DIR)
+    logger.info("SpaCy model loaded successfully.")
+
+except Exception as e:
     logger.error(f"Failed to load SpaCy model from '{MODEL_TAR_PATH}': {e}")
-    st.error("Failed to load SpaCy model. Ensure it is correctly placed and compatible.")
+    st.error("Failed to load SpaCy model. Check model placement and compatibility.")
     st.stop()
 
 # --- Initialize Models ---
