@@ -51,21 +51,14 @@ try:
     nlp = spacy.load(SPACY_MODEL)
     logger.info(f"SpaCy model '{SPACY_MODEL}' loaded successfully.")
 except OSError:
-    logger.warning(f"SpaCy model '{SPACY_MODEL}' not found. Attempting to download...")
-    try:
-        # Try downloading the model if not present
-        import subprocess
-        subprocess.run([sys.executable, "-m", "spacy", "download", SPACY_MODEL], check=True)
-        nlp = spacy.load(SPACY_MODEL)
-        logger.info(f"SpaCy model '{SPACY_MODEL}' downloaded and loaded successfully.")
-    except Exception as e:
-        logger.error(f"Failed to download and load SpaCy model '{SPACY_MODEL}': {e}")
-        st.error(f"Failed to download and load the SpaCy model '{SPACY_MODEL}'. Please ensure that the model is available and compatible.")
-        st.stop()
+    logger.error(f"SpaCy model '{SPACY_MODEL}' not found. Ensure it is pre-installed and specified in 'requirements.txt'.")
+    st.error(f"Failed to load SpaCy model '{SPACY_MODEL}'. Please ensure the model is included in the environment.")
+    st.stop()
 except ImportError as e:
     logger.error(f"ImportError: {e}")
     st.error("An ImportError occurred. Please ensure all required packages are installed correctly.")
     st.stop()
+
 
 # --- Initialize Models ---
 @st.cache_resource
