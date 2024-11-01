@@ -1,5 +1,3 @@
-# user_utils.py
-
 import sqlite3
 import bcrypt
 from pathlib import Path
