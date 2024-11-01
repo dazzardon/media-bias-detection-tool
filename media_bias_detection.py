@@ -17,6 +17,7 @@ import ssl
 import sqlite3
 import bcrypt
 import sys
+from pathlib import Path  # Added import for Path
 
 # Import spaCy
 import spacy
@@ -26,10 +27,8 @@ from user_utils import (
     create_user,
     get_user,
     verify_password,
-    reset_password,
-    load_default_bias_terms,
-    save_analysis_to_history,
-    load_user_history
+    reset_password
+    # Removed load_default_bias_terms, save_analysis_to_history, load_user_history from import
 )
 
 # --- Configure Logging ---
@@ -56,8 +55,8 @@ try:
         # Extract the tar.gz file if the directory doesn't exist
         import tarfile
         with tarfile.open(MODEL_PATH, "r:gz") as tar:
-            tar.extractall(path=EXTRACTED_MODEL_DIR)
-            logger.info(f"Extracted spaCy model to {EXTRACTED_MODEL_DIR}.")
+            tar.extractall(path=EXTRACTED_MODEL_DIR.parent)
+            logger.info(f"Extracted spaCy model to {EXTRACTED_MODEL_DIR.parent}.")
         # Load the model after extraction
         nlp = spacy.load(EXTRACTED_MODEL_DIR)
         logger.info("SpaCy model loaded successfully after extraction.")
