@@ -18,6 +18,7 @@ import sqlite3
 import bcrypt
 import sys
 from pathlib import Path  # Import Path from pathlib
+import tarfile  # For extracting the tar.gz file if needed
 
 # Import spaCy
 import spacy
@@ -28,7 +29,6 @@ from user_utils import (
     get_user,
     verify_password,
     reset_password
-    # Removed load_default_bias_terms, save_analysis_to_history, load_user_history from import
 )
 
 # --- Configure Logging ---
@@ -42,15 +42,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load the spaCy model directly
-try:
-    nlp = spacy.load("en_core_web_sm")
-    logger.info("SpaCy model 'en_core_web_sm' loaded successfully.")
-except (OSError, ImportError) as e:
-    logger.error(f"Failed to load SpaCy model 'en_core_web_sm': {e}")
-    st.error("Failed to load SpaCy model 'en_core_web_sm'. Ensure it is installed correctly.")
-    st.stop()
+# Define the spaCy model path and extraction directory
+MODEL_TAR_PATH = Path("/mount/src/media-bias-detection-tool/models/en_core_web_sm-3.5.0.tar.gz")
+EXTRACTED_MODEL_DIR = Path("/mount/src/media-bias-detection-tool/models/en_core_web_sm")
 
+# Load the spaCy model directly or extract if needed
+try:
+    # Attempt to load model if it's already extracted
+    if EXTRACTED_MODEL_DIR.exists():
+        nlp = spacy.load(EXTRACTED_MODEL_DIR)
+        logger.info("SpaCy model loaded successfully from extracted directory.")
+    else:
+        # Extract the model tar.gz file if the directory does not exist
+        with tarfile.open(MODEL_TAR_PATH, "r:gz") as tar:
+            tar.extractall(path=EXTRACTED_MODEL_DIR.parent)
+        logger.info(f"Extracted spaCy model to {EXTRACTED_MODEL_DIR}")
+
+        # Load the spaCy model after extraction
+        nlp = spacy.load(EXTRACTED_MODEL_DIR)
+        logger.info("SpaCy model loaded successfully after extraction.")
+except (OSError, ImportError, FileNotFoundError) as e:
+    logger.error(f"Failed to load SpaCy model from '{MODEL_TAR_PATH}': {e}")
+    st.error("Failed to load SpaCy model. Ensure it is correctly placed and compatible.")
+    st.stop()
 
 # --- Initialize Models ---
 @st.cache_resource
@@ -74,6 +88,7 @@ def initialize_models():
         'nlp': nlp
     }
     return models
+
 
 
 
