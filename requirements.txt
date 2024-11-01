@@ -1,5 +1,6 @@
 streamlit
 spacy>=3.5.2
+en_core_web_sm>=3.5.0
 thinc>=8.1.8
 transformers
 torch>=2.0
