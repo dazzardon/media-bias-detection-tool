@@ -58,12 +58,13 @@ def initialize_models():
         # Initialize SpaCy NLP Model from local path
         from spacy.util import load_model_from_path
 
-        # Construct the model path
-        model_path = Path(__file__).parent / 'models' / 'en_core_web_sm-3.5.0'
+        # Construct the absolute model path
+        script_dir = Path(__file__).parent
+        model_path = script_dir / 'models' / 'en_core_web_sm-3.5.0'
 
         if not model_path.exists():
             logger.error(f"SpaCy model directory not found at {model_path}")
-            st.error("SpaCy model directory not found.")
+            st.error("SpaCy model directory not found. Please ensure the model is correctly extracted and present in the 'models/' directory.")
             return None
 
         nlp = load_model_from_path(model_path)
@@ -79,6 +80,7 @@ def initialize_models():
         logger.error(f"Error initializing models: {e}")
         st.error("Failed to initialize NLP models. Please check the logs for more details.")
         return None
+
 # --- Helper Functions ---
 
 def is_strong_password(password):
