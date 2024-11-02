@@ -55,8 +55,19 @@ def initialize_models():
             model="IDA-SERICS/PropagandaDetection",
             device=-1  # Use CPU
         )
-        # Initialize SpaCy NLP Model
-        nlp = spacy.load("en_core_web_sm")  # Assume the model is installed
+        # Initialize SpaCy NLP Model from local path
+        from spacy.util import load_model_from_path
+
+        # Construct the model path
+        model_path = Path(__file__).parent / 'models' / 'en_core_web_sm-3.5.0'
+
+        if not model_path.exists():
+            logger.error(f"SpaCy model directory not found at {model_path}")
+            st.error("SpaCy model directory not found.")
+            return None
+
+        nlp = load_model_from_path(model_path)
+
         models = {
             'sentiment_pipeline': sentiment_pipeline_model,
             'propaganda_pipeline': propaganda_pipeline_model,
@@ -68,7 +79,6 @@ def initialize_models():
         logger.error(f"Error initializing models: {e}")
         st.error("Failed to initialize NLP models. Please check the logs for more details.")
         return None
-
 # --- Helper Functions ---
 
 def is_strong_password(password):
