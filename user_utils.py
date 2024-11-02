@@ -22,7 +22,7 @@ def get_connection():
     try:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
-        # Create users table if it doesn't exist
+        # Create users table with the correct schema
         c.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
