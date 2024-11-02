@@ -17,7 +17,6 @@ import unicodedata
 import ssl
 import plotly.express as px
 import torch
-import subprocess
 import sys
 
 # Import user management functions
@@ -39,20 +38,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Function to Install SpaCy Model ---
-def install_spacy_model(model_name="en_core_web_sm"):
-    """
-    Installs the specified SpaCy model if it's not already installed.
-    """
-    try:
-        spacy.load(model_name)
-    except OSError:
-        logger.info(f"Model {model_name} not found. Installing...")
-        subprocess.check_call([sys.executable, "-m", "spacy", "download", model_name])
-        logger.info(f"Model {model_name} installed successfully.")
-
-# --- Install the SpaCy model ---
-install_spacy_model()
+# --- Remove Runtime Installation of SpaCy Model ---
+# The spaCy model is now pre-installed via requirements.txt, so we can remove the installation function.
 
 # --- Initialize Models ---
 @st.cache_resource
@@ -71,7 +58,7 @@ def initialize_models():
             device=-1  # Use CPU
         )
         # Initialize SpaCy NLP Model
-        nlp = spacy.load("en_core_web_sm")
+        nlp = spacy.load("en_core_web_sm")  # Directly load the pre-installed model
 
         models = {
             'sentiment_pipeline': sentiment_pipeline_model,
