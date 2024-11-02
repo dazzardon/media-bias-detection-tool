@@ -55,8 +55,15 @@ def initialize_models():
             device=-1  # Use CPU
         )
         # Initialize SpaCy NLP Model
-        nlp = spacy.load("en_core_web_sm")  # Directly load the pre-installed model
-
+        try:
+            nlp = spacy.load("en_core_web_sm")  # Directly load the pre-installed model
+        except OSError:
+            # If the model is not found, download it
+            logger.info("Downloading SpaCy 'en_core_web_sm' model...")
+            from spacy.cli import download
+            download("en_core_web_sm")
+            nlp = spacy.load("en_core_web_sm")
+    
         models = {
             'sentiment_pipeline': sentiment_pipeline_model,
             'propaganda_pipeline': propaganda_pipeline_model,
