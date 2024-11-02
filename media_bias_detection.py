@@ -16,6 +16,9 @@ import re
 import unicodedata
 import ssl
 import plotly.express as px
+import torch
+import subprocess
+import sys
 
 # Import user management functions
 from user_utils import (
@@ -27,10 +30,6 @@ from user_utils import (
     save_analysis_to_history,
     load_user_history
 )
-
-import bcrypt
-import subprocess
-import sys
 
 # --- Configure Logging ---
 logging.basicConfig(
