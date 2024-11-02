@@ -18,7 +18,6 @@ def get_connection():
     """
     Establishes a connection to the SQLite database.
     Creates the users table if it doesn't exist with the correct schema.
-    Also ensures that all required columns are present.
     """
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -34,26 +33,6 @@ def get_connection():
             )
         """)
         conn.commit()
-        
-        # Verify if all required columns exist
-        c.execute("PRAGMA table_info(users);")
-        columns = [info[1] for info in c.fetchall()]
-        required_columns = ['id', 'username', 'name', 'email', 'password']
-        missing_columns = [col for col in required_columns if col not in columns]
-        
-        if missing_columns:
-            for col in missing_columns:
-                if col == 'username':
-                    c.execute("ALTER TABLE users ADD COLUMN username TEXT UNIQUE NOT NULL;")
-                elif col == 'name':
-                    c.execute("ALTER TABLE users ADD COLUMN name TEXT NOT NULL;")
-                elif col == 'email':
-                    c.execute("ALTER TABLE users ADD COLUMN email TEXT UNIQUE NOT NULL;")
-                elif col == 'password':
-                    c.execute("ALTER TABLE users ADD COLUMN password TEXT NOT NULL;")
-            conn.commit()
-            logger.info(f"Added missing columns: {missing_columns}")
-        
         logger.info("Connected to the database and ensured users table exists.")
         return conn
     except Exception as e:
