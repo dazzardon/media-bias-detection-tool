@@ -1,3 +1,5 @@
+# user_utils.py
+
 import sqlite3
 import bcrypt
 from pathlib import Path
@@ -16,6 +18,7 @@ def get_connection():
     """
     Establishes a connection to the SQLite database.
     Creates the users table if it doesn't exist with the correct schema.
+    Also ensures that all required columns are present.
     """
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -31,9 +34,29 @@ def get_connection():
             )
         """)
         conn.commit()
+        
+        # Verify if all required columns exist
+        c.execute("PRAGMA table_info(users);")
+        columns = [info[1] for info in c.fetchall()]
+        required_columns = ['id', 'username', 'name', 'email', 'password']
+        missing_columns = [col for col in required_columns if col not in columns]
+        
+        if missing_columns:
+            for col in missing_columns:
+                if col == 'username':
+                    c.execute("ALTER TABLE users ADD COLUMN username TEXT UNIQUE NOT NULL;")
+                elif col == 'name':
+                    c.execute("ALTER TABLE users ADD COLUMN name TEXT NOT NULL;")
+                elif col == 'email':
+                    c.execute("ALTER TABLE users ADD COLUMN email TEXT UNIQUE NOT NULL;")
+                elif col == 'password':
+                    c.execute("ALTER TABLE users ADD COLUMN password TEXT NOT NULL;")
+            conn.commit()
+            logger.info(f"Added missing columns: {missing_columns}")
+        
         logger.info("Connected to the database and ensured users table exists.")
         return conn
-    except sqlite3.Error as e:
+    except Exception as e:
         logger.error(f"Error connecting to the database: {e}")
         return None
 
@@ -72,24 +95,24 @@ def create_user(username, name, email, password):
 def get_user(username):
     """
     Retrieves a user from the database by username.
-    Returns the user record if found, else None.
+    Returns the user as a dictionary if found, else None.
     """
     try:
         conn = get_connection()
         if conn is None:
             return None
+        conn.row_factory = sqlite3.Row  # This allows us to access columns by name
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE username = ?", (username,))
-        user = c.fetchone()
+        row = c.fetchone()
         conn.close()
-        if user:
+        if row:
+            user = dict(row)
             logger.info(f"User '{username}' retrieved successfully.")
+            return user
         else:
             logger.info(f"User '{username}' not found.")
-        return user
-    except sqlite3.Error as e:
-        logger.error(f"Database error while fetching user '{username}': {e}")
-        return None
+            return None
     except Exception as e:
         logger.error(f"Error fetching user '{username}': {e}")
         return None
@@ -102,8 +125,8 @@ def verify_password(username, password):
     try:
         user = get_user(username)
         if user:
-            stored_password = user[4]  # Assuming password is the 5th column
-            is_correct = bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
+            stored_password = user['password']  # Accessing the password via dictionary key
+            is_correct = bcrypt.checkpw(password.encode('utf-8'), stored_password)
             if is_correct:
                 logger.info(f"Password for user '{username}' verified successfully.")
             else:
@@ -136,9 +159,6 @@ def reset_password(username, new_password):
         conn.close()
         logger.info(f"Password reset successfully for user '{username}'.")
         return True
-    except sqlite3.Error as e:
-        logger.error(f"Database error while resetting password for user '{username}': {e}")
-        return False
     except Exception as e:
         logger.error(f"Error resetting password for user '{username}': {e}")
         return False
@@ -170,7 +190,8 @@ def load_default_bias_terms():
         'zealous', 'militant', 'dictator', 'regime'
     ]
     # Remove duplicates and convert to lowercase
-    return list(set([term.lower() for term in bias_terms]))
+    bias_terms = list(set([term.lower() for term in bias_terms]))
+    return bias_terms
 
 def save_analysis_to_history(data):
     """
@@ -199,7 +220,8 @@ def load_user_history(email):
     try:
         if os.path.exists(history_file):
             with open(history_file, 'r') as f:
-                return json.load(f)
+                history = json.load(f)
+            return history
         else:
             return []
     except Exception as e:
