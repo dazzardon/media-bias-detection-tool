@@ -38,9 +38,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Remove Runtime Installation of SpaCy Model ---
-# The spaCy model is now pre-installed via requirements.txt, so we can remove the installation function.
-
 # --- Initialize Models ---
 @st.cache_resource
 def initialize_models():
@@ -203,7 +200,7 @@ def login_user_ui():
                 user = get_user(username)
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                st.session_state['email'] = user.email  # Updated to use the 'email' attribute
+                st.session_state['email'] = user.email  # Ensure 'user' has an 'email' attribute
                 st.session_state['bias_terms'] = load_default_bias_terms()
                 st.success("Logged in successfully.")
                 logger.info(f"User '{username}' logged in successfully.")
