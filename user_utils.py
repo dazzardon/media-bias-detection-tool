@@ -1,5 +1,3 @@
-# user_utils.py
-
 import sqlite3
 import bcrypt
 from pathlib import Path
@@ -35,7 +33,7 @@ def get_connection():
         conn.commit()
         logger.info("Connected to the database and ensured users table exists.")
         return conn
-    except Exception as e:
+    except sqlite3.Error as e:
         logger.error(f"Error connecting to the database: {e}")
         return None
 
@@ -89,6 +87,9 @@ def get_user(username):
         else:
             logger.info(f"User '{username}' not found.")
         return user
+    except sqlite3.Error as e:
+        logger.error(f"Database error while fetching user '{username}': {e}")
+        return None
     except Exception as e:
         logger.error(f"Error fetching user '{username}': {e}")
         return None
@@ -102,7 +103,7 @@ def verify_password(username, password):
         user = get_user(username)
         if user:
             stored_password = user[4]  # Assuming password is the 5th column
-            is_correct = bcrypt.checkpw(password.encode('utf-8'), stored_password)
+            is_correct = bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
             if is_correct:
                 logger.info(f"Password for user '{username}' verified successfully.")
             else:
@@ -135,6 +136,9 @@ def reset_password(username, new_password):
         conn.close()
         logger.info(f"Password reset successfully for user '{username}'.")
         return True
+    except sqlite3.Error as e:
+        logger.error(f"Database error while resetting password for user '{username}': {e}")
+        return False
     except Exception as e:
         logger.error(f"Error resetting password for user '{username}': {e}")
         return False
@@ -166,8 +170,7 @@ def load_default_bias_terms():
         'zealous', 'militant', 'dictator', 'regime'
     ]
     # Remove duplicates and convert to lowercase
-    bias_terms = list(set([term.lower() for term in bias_terms]))
-    return bias_terms
+    return list(set([term.lower() for term in bias_terms]))
 
 def save_analysis_to_history(data):
     """
@@ -196,8 +199,7 @@ def load_user_history(email):
     try:
         if os.path.exists(history_file):
             with open(history_file, 'r') as f:
-                history = json.load(f)
-            return history
+                return json.load(f)
         else:
             return []
     except Exception as e:
