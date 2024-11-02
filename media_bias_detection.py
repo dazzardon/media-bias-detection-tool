@@ -198,12 +198,16 @@ def login_user_ui():
                 return
             if verify_password(username, password):
                 user = get_user(username)
-                st.session_state['logged_in'] = True
-                st.session_state['username'] = username
-                st.session_state['email'] = user.email  # Ensure 'user' has an 'email' attribute
-                st.session_state['bias_terms'] = load_default_bias_terms()
-                st.success("Logged in successfully.")
-                logger.info(f"User '{username}' logged in successfully.")
+                if user:
+                    st.session_state['logged_in'] = True
+                    st.session_state['username'] = username
+                    st.session_state['email'] = user['email']  # Corrected access
+                    st.session_state['bias_terms'] = load_default_bias_terms()
+                    st.success("Logged in successfully.")
+                    logger.info(f"User '{username}' logged in successfully.")
+                else:
+                    st.error("User data not found.")
+                    logger.error(f"User data missing for '{username}' despite successful password verification.")
             else:
                 st.error("Invalid username or password.")
                 logger.warning(f"Failed login attempt for username: '{username}'.")
