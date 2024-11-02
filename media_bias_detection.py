@@ -216,7 +216,7 @@ def login_user_ui():
                 user = get_user(username)
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                st.session_state['email'] = user[3]  # Assuming email is the 4th column
+                st.session_state['email'] = user.email  # Updated to use the 'email' attribute
                 st.session_state['bias_terms'] = load_default_bias_terms()
                 st.success("Logged in successfully.")
                 logger.info(f"User '{username}' logged in successfully.")
