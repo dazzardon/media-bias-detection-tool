@@ -12,5 +12,3 @@ sentencepiece==0.1.96
 aiohttp==3.10.10
 bcrypt==4.2.0
 transformers==4.30.0
-# Install the local SpaCy model
-./models/en_core_web_sm-3.5.0.tar.gz
