@@ -56,19 +56,29 @@ def initialize_models():
         )
         # Initialize SpaCy NLP Model
         try:
-            nlp = spacy.load("en_core_web_sm")  # Directly load the pre-installed model
+            nlp = spacy.load("en_core_web_sm")  # Load the pre-installed model
         except OSError:
-            # If the model is not found, download it
-            logger.info("Downloading SpaCy 'en_core_web_sm' model...")
-            from spacy.cli import download
-            download("en_core_web_sm")
-            nlp = spacy.load("en_core_web_sm")
-    
+            logger.info("SpaCy model 'en_core_web_sm' not found. Attempting to install locally.")
+            # Attempt to install the model from the local tar.gz file
+            model_path = Path("./models/en_core_web_sm-3.5.0.tar.gz")
+            if model_path.exists():
+                logger.info("Installing SpaCy model from local tar.gz file.")
+                # Install the model from the tar.gz file
+                import subprocess
+                subprocess.run([sys.executable, "-m", "pip", "install", str(model_path)], check=True)
+                # Load the model after installation
+                nlp = spacy.load("en_core_web_sm")
+            else:
+                logger.error("SpaCy model tar.gz file not found in the 'models/' directory.")
+                st.error("SpaCy model 'en_core_web_sm' not found and could not be installed.")
+                return None
+
         models = {
             'sentiment_pipeline': sentiment_pipeline_model,
             'propaganda_pipeline': propaganda_pipeline_model,
             'nlp': nlp
         }
+        logger.info("Models initialized successfully.")
         return models
     except Exception as e:
         logger.error(f"Error initializing models: {e}")
