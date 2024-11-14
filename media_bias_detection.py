@@ -3,7 +3,7 @@
 
 """
 Enhanced Propaganda and Media Bias Detection Script
-===================================================
+==================================================
 
 This script detects propaganda and media bias in articles by analyzing their content using machine learning models,
 topic modeling, and Named Entity Recognition (NER). It leverages specific propaganda techniques and media bias
@@ -56,8 +56,6 @@ import json
 import logging
 import argparse
 from typing import List, Tuple, Dict
-from collections import defaultdict
-
 import pandas as pd
 import swifter
 import re
@@ -92,6 +90,7 @@ from bertopic import BERTopic
 import joblib
 import torch
 import unittest
+from collections import defaultdict
 
 # ----------------------------
 # Initialization
@@ -137,20 +136,16 @@ RELEVANT_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC"}
 # ----------------------------
 
 DEFAULT_CONFIG = {
-    'data_file': r'path\to\Propaganda_Dataset.json',  # Input JSON file path
-    'annotated_data_file': r'path\to\annotated_articles.parquet',   # Output Parquet file path
-    'propaganda_techniques_file': r'path\to\propaganda_techniques.json',  # JSON file containing propaganda techniques with keywords
-    'bias_model_file': r'models/media_bias_model',          # Path to the media bias model directory in 'models'
-    'propaganda_model_file': r'models/propaganda_detection_model',  # Path to your propaganda model
-    'label_encoder_file': r'models/label_encoder.pkl',       # Path to the label encoder
-    'bias_report_file': r'reports/media_bias_report.html',   # Report file for media bias detection
-    'propaganda_report_file': r'reports/propaganda_report.html',  # Report file for propaganda detection
-    'metrics_file': r'reports/evaluation_metrics.txt',       # Metrics file for evaluation results
-    'log_file': r'logs/propaganda_detection.log',             # Log file
-    'report_file': r'reports/propaganda_report.html',         # Interactive report file
-    'model_file': r'models/propaganda_detection_model',      # Machine learning model directory
-    'num_topics': 5,                                          # Number of topics for BERTopic (configurable)
-    'misclassification_report_file': r'reports/misclassification_report.txt',  # Misclassification report file
+    'data_file': 'models/Propaganda_Dataset.json',               # Input JSON data file
+    'propaganda_techniques_file': 'models/propaganda_techniques.json',  # Techniques JSON file
+    'bias_model_file': 'models/media_bias_model',                # Media bias model path
+    'propaganda_model_file': 'models/propaganda_detection_model', # Propaganda model path
+    'label_encoder_file': 'models/label_encoder.pkl',            # Label encoder path
+    'log_file': 'logs/propaganda_detection.log',                 # Log file path
+    'bias_report_file': 'reports/media_bias_report.html',        # Report file for media bias detection
+    'propaganda_report_file': 'reports/propaganda_report.html',  # Report file for propaganda detection
+    'metrics_file': 'reports/evaluation_metrics.txt',            # Metrics file for evaluation results
+    'threshold': 1.0,                                           # Threshold for labeling as 'Propaganda'
     'log_level': 'INFO'  # Default logging level
 }
 
@@ -162,6 +157,11 @@ def setup_logging(log_file: str, log_level: str):
     """Configure logging to file and console with different levels."""
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)  # Set root logger level to DEBUG
+
+    # Create log directory if it doesn't exist
+    log_dir = os.path.dirname(log_file)
+    if log_dir and not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     # File handler for DEBUG and above
     fh = logging.FileHandler(log_file)
@@ -360,7 +360,7 @@ def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFr
         plt.figure(figsize=(6,4))
         sns.countplot(data=df, x='Is_Propaganda')
         plt.title('Propaganda Distribution')
-        plt.savefig('propaganda_distribution.png')
+        plt.savefig('reports/propaganda_distribution.png')
         plt.close()
         logging.info("Saved propaganda distribution plot.")
 
@@ -417,6 +417,27 @@ def load_transformer_model(model_path: str, label_encoder_path: str):
         sys.exit(1)
     except Exception as e:
         logging.error(f"Error loading model: {e}")
+        sys.exit(1)
+
+def load_bias_model(model_path: str):
+    """
+    Load the media bias detection model.
+
+    Args:
+        model_path (str): Path to the media bias detection model directory.
+
+    Returns:
+        Tuple[DistilBertForSequenceClassification, DistilBertTokenizer]: The loaded model and tokenizer.
+    """
+    try:
+        logging.info("Loading media bias detection model...")
+        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
+        model = DistilBertForSequenceClassification.from_pretrained(model_path)
+        model.eval()
+        logging.info(f"Loaded media bias detection model from '{model_path}'.")
+        return model, tokenizer
+    except Exception as e:
+        logging.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
         sys.exit(1)
 
 def detect_media_bias(text: str, model, tokenizer, mlb, threshold: float = 0.5) -> str:
@@ -500,6 +521,10 @@ def generate_evaluation_metrics(df: pd.DataFrame, mlb: MultiLabelBinarizer, metr
         f1 = f1_score(y_true, y_pred, average='macro')
 
         # Save metrics to a text file
+        metrics_dir = os.path.dirname(metrics_file)
+        if metrics_dir and not os.path.exists(metrics_dir):
+            os.makedirs(metrics_dir)
+        
         with open(metrics_file, 'w') as f:
             f.write("Automated Evaluation Metrics\n")
             f.write("============================\n\n")
@@ -545,6 +570,10 @@ def perform_detailed_misclassification_analysis(
         top_false_negatives = sorted(false_negatives.items(), key=lambda x: x[1], reverse=True)[:5]
 
         # Save the analysis to a file
+        misclassification_dir = os.path.dirname(report_file)
+        if misclassification_dir and not os.path.exists(misclassification_dir):
+            os.makedirs(misclassification_dir)
+        
         with open(report_file, 'w') as f:
             f.write("Detailed Misclassification Analysis Report\n")
             f.write("==========================================\n\n")
@@ -620,13 +649,13 @@ def train_transformer_model(df: pd.DataFrame, model_save_path: str, label_encode
 
         # Define training arguments
         training_args = TrainingArguments(
-            output_dir='./results',
+            output_dir='./models/results',
             num_train_epochs=5,
             per_device_train_batch_size=16,
             per_device_eval_batch_size=16,
             warmup_steps=500,
             weight_decay=0.01,
-            logging_dir='./logs',
+            logging_dir='./models/logs',
             logging_steps=10,
             evaluation_strategy="epoch",
             save_strategy="epoch",
@@ -671,6 +700,9 @@ def train_transformer_model(df: pd.DataFrame, model_save_path: str, label_encode
         logging.info(f"Average F1 Score: {f1:.4f}")
 
         # Save the model
+        model_dir = os.path.dirname(model_save_path)
+        if model_dir and not os.path.exists(model_dir):
+            os.makedirs(model_dir)
         trainer.save_model(model_save_path)
         tokenizer.save_pretrained(model_save_path)
         logging.info(f"Transformer model saved to '{model_save_path}'.")
@@ -680,7 +712,7 @@ def train_transformer_model(df: pd.DataFrame, model_save_path: str, label_encode
             y_true=true_labels,
             y_pred=predictions,
             mlb=mlb,
-            report_file=DEFAULT_CONFIG['misclassification_report_file']
+            report_file=DEFAULT_CONFIG['metrics_file']
         )
 
     except Exception as e:
@@ -702,29 +734,6 @@ def compute_metrics(eval_pred, mlb):
     preds = (probs > 0.5).int().numpy()
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='macro', zero_division=0)
     return {'precision': precision, 'recall': recall, 'f1': f1}
-
-def load_bias_model(model_path: str):
-    """
-    Load the media bias detection model.
-
-    Args:
-        model_path (str): Path to the media bias detection model directory.
-
-    Returns:
-        Tuple[DistilBertForSequenceClassification, DistilBertTokenizer]: The loaded model and tokenizer.
-    """
-    # Placeholder implementation. Replace with actual model loading logic.
-    # Example for a transformer-based model:
-    try:
-        logging.info("Loading media bias detection model...")
-        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
-        model = DistilBertForSequenceClassification.from_pretrained(model_path)
-        model.eval()
-        logging.info(f"Loaded media bias detection model from '{model_path}'.")
-        return model, tokenizer
-    except Exception as e:
-        logging.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
-        sys.exit(1)
 
 def predict_with_transformer(
     model: DistilBertForSequenceClassification,
@@ -831,20 +840,20 @@ def parse_arguments() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(description="Enhanced Propaganda and Media Bias Detection in Articles.")
     parser.add_argument('--input', type=str, default=DEFAULT_CONFIG['data_file'], help='Path to input JSON file.')
-    parser.add_argument('--output', type=str, default=DEFAULT_CONFIG['annotated_data_file'], help='Path to output Parquet file.')
+    parser.add_argument('--output', type=str, default='annotated_articles.parquet', help='Path to output Parquet file.')
     parser.add_argument('--techniques', type=str, default=DEFAULT_CONFIG['propaganda_techniques_file'], help='Path to propaganda techniques JSON file.')
     parser.add_argument('--bias_model', type=str, default=DEFAULT_CONFIG['bias_model_file'], help='Path to media bias model directory.')
     parser.add_argument('--bias_report', type=str, default=DEFAULT_CONFIG['bias_report_file'], help='Path to save media bias report.')
-    parser.add_argument('--propaganda_report', type=str, default=DEFAULT_CONFIG['propaganda_report_file'], help='Path to save propaganda report.')
-    parser.add_argument('--threshold', type=float, default=DEFAULT_CONFIG['threshold'], help='Threshold for labeling as Propaganda.')
-    parser.add_argument('--log', type=str, default=DEFAULT_CONFIG['log_file'], help='Path to log file.')
-    parser.add_argument('--report', type=str, default=DEFAULT_CONFIG['report_file'], help='Path to interactive report HTML file.')
-    parser.add_argument('--model', type=str, default=DEFAULT_CONFIG['model_file'], help='Path to propaganda detection model directory.')
+    parser.add_argument('--bias_model_label_encoder', type=str, default='models/bias_label_encoder.pkl', help='Path to media bias label encoder file.')
+    parser.add_argument('--propaganda_model', type=str, default=DEFAULT_CONFIG['propaganda_model_file'], help='Path to propaganda model directory.')
     parser.add_argument('--label_encoder', type=str, default=DEFAULT_CONFIG['label_encoder_file'], help='Path to label encoder file.')
-    parser.add_argument('--num_topics', type=int, default=DEFAULT_CONFIG['num_topics'], help='Number of topics for BERTopic.')
-    parser.add_argument('--misclassification_report', type=str, default=DEFAULT_CONFIG['misclassification_report_file'], help='Path to misclassification report file.')
+    parser.add_argument('--log', type=str, default=DEFAULT_CONFIG['log_file'], help='Path to log file.')
+    parser.add_argument('--report', type=str, default=DEFAULT_CONFIG['propaganda_report_file'], help='Path to interactive report HTML file.')
     parser.add_argument('--metrics_file', type=str, default=DEFAULT_CONFIG['metrics_file'], help='Path to save evaluation metrics.')
+    parser.add_argument('--misclassification_report', type=str, default='reports/misclassification_report.txt', help='Path to misclassification report file.')
     parser.add_argument('--log_level', type=str, default=DEFAULT_CONFIG['log_level'], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help='Logging verbosity level.')
+    parser.add_argument('--threshold', type=float, default=DEFAULT_CONFIG['threshold'], help='Threshold for labeling as Propaganda.')
+    parser.add_argument('--num_topics', type=int, default=DEFAULT_CONFIG['num_topics'], help='Number of topics for BERTopic.')
     return parser.parse_args()
 
 # ----------------------------
@@ -929,19 +938,19 @@ def main():
 
     # Machine Learning Classification using Transformer Model
     logging.info("Starting transformer-based machine learning classification...")
-    train_transformer_model(df, args.model, args.label_encoder)
+    train_transformer_model(df, args.propaganda_model, args.label_encoder)
 
-    # Load trained model and label encoder
-    logging.info("Loading trained transformer model and label encoder...")
-    model, tokenizer, mlb = load_transformer_model(args.model, args.label_encoder)
+    # Load trained propaganda model and label encoder
+    logging.info("Loading trained propaganda transformer model and label encoder...")
+    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(args.propaganda_model, args.label_encoder)
 
     # Predict propaganda techniques for each article
-    logging.info("Predicting propaganda techniques on processed data...")
+    logging.info("Detecting propaganda techniques in articles...")
     try:
-        df['Predicted_Techniques'] = predict_with_transformer(model, tokenizer, mlb, df['processed_content'].tolist(), threshold=0.5)
-        logging.info("Completed predictions on processed data.")
+        df['Predicted_Techniques'] = predict_with_transformer(propaganda_model, propaganda_tokenizer, propaganda_mlb, df['processed_content'].tolist(), threshold=0.5)
+        logging.info("Completed propaganda techniques detection.")
     except Exception as e:
-        logging.error(f"Error during predictions: {type(e).__name__} - {e}")
+        logging.error(f"Error during propaganda techniques detection: {type(e).__name__} - {e}")
         sys.exit(1)
 
     # Topic Modeling with BERTopic
@@ -983,7 +992,7 @@ def main():
     # Load or define MultiLabelBinarizer for media bias categories
     # This assumes you have a label encoder for media bias similar to propaganda techniques
     # If media bias is single-label classification, adjust accordingly
-    bias_mlb_file = os.path.join(args.bias_model, 'bias_label_encoder.pkl')
+    bias_mlb_file = args.bias_model_label_encoder
     if os.path.exists(bias_mlb_file):
         bias_mlb = joblib.load(bias_mlb_file)
         logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
@@ -993,6 +1002,10 @@ def main():
         bias_categories = ["Left", "Center", "Right", "Unknown"]
         bias_mlb = MultiLabelBinarizer(classes=bias_categories)
         bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
+        # Ensure reports directory exists
+        reports_dir = os.path.dirname(args.bias_report)
+        if reports_dir and not os.path.exists(reports_dir):
+            os.makedirs(reports_dir)
         joblib.dump(bias_mlb, bias_mlb_file)
         logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
 
@@ -1008,7 +1021,7 @@ def main():
     # Generate Media Bias Report
     generate_media_bias_report(df, args.bias_report)
 
-    # Topic Modeling with BERTopic (if needed again)
+    # Topic Modeling with BERTopic
     logging.info("Starting topic modeling with BERTopic...")
     topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
 
@@ -1041,21 +1054,26 @@ def main():
 
     # Perform Semi-Supervised Learning
     logging.info("Performing semi-supervised learning to augment training data...")
-    df = perform_semi_supervised_learning(df, model, tokenizer, mlb, threshold=0.9)
+    df = perform_semi_supervised_learning(df, propaganda_model, propaganda_tokenizer, propaganda_mlb, threshold=0.9)
 
-    # Retrain the model with augmented data
+    # Retrain the propaganda model with augmented data
     logging.info("Retraining transformer model with augmented data...")
-    train_transformer_model(df, args.model, args.label_encoder)
+    train_transformer_model(df, args.propaganda_model, args.label_encoder)
 
-    # Reload the updated model
-    model, tokenizer, mlb = load_transformer_model(args.model, args.label_encoder)
+    # Reload the updated propaganda model and label encoder
+    logging.info("Reloading updated transformer model and label encoder...")
+    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(args.propaganda_model, args.label_encoder)
 
-    # Re-predict with the updated model
-    logging.info("Re-predicting propaganda techniques on processed data with updated transformer model...")
-    df['Predicted_Techniques'] = predict_with_transformer(model, tokenizer, mlb, df['processed_content'].tolist(), threshold=0.5)
-    logging.info("Completed re-predictions with updated transformer model.")
+    # Re-predict propaganda techniques with the updated model
+    logging.info("Re-predicting propaganda techniques with updated transformer model...")
+    try:
+        df['Predicted_Techniques'] = predict_with_transformer(propaganda_model, propaganda_tokenizer, propaganda_mlb, df['processed_content'].tolist(), threshold=0.5)
+        logging.info("Completed re-predictions with updated transformer model.")
+    except Exception as e:
+        logging.error(f"Error during re-predictions: {type(e).__name__} - {e}")
+        sys.exit(1)
 
-    # Re-running topic modeling with updated model (optional)
+    # Re-running topic modeling with updated model
     logging.info("Re-running topic modeling with updated model...")
     topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
 
@@ -1089,13 +1107,13 @@ def main():
         logging.error(f"Error generating enhanced report: {type(e).__name__} - {e}")
 
     # Calculate and save evaluation metrics
-    generate_evaluation_metrics(df, mlb, args.metrics_file)
+    generate_evaluation_metrics(df, propaganda_mlb, args.metrics_file)
 
     # Perform detailed misclassification analysis
     perform_detailed_misclassification_analysis(
-        y_true=mlb.transform(df['Techniques']),
-        y_pred=mlb.transform(df['Predicted_Techniques']),
-        mlb=mlb,
+        y_true=propaganda_mlb.transform(df['Techniques']),
+        y_pred=propaganda_mlb.transform(df['Predicted_Techniques']),
+        mlb=propaganda_mlb,
         report_file=args.misclassification_report
     )
 
@@ -1127,6 +1145,9 @@ def main():
     # Save Annotated Data
     logging.info("Saving annotated data to Parquet file...")
     try:
+        output_dir = os.path.dirname(args.output)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         df.to_parquet(args.output, index=False)
         logging.info(f"Annotated data saved to '{args.output}'.")
     except Exception as e:
