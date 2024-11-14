@@ -3,7 +3,7 @@
 
 """
 Enhanced Propaganda and Media Bias Detection Script
-====================================================
+===================================================
 
 This script detects propaganda and media bias in articles by analyzing their content using machine learning models,
 topic modeling, and Named Entity Recognition (NER). It leverages specific propaganda techniques and media bias
@@ -50,13 +50,17 @@ Dependencies:
 Ensure all dependencies are installed before running the script.
 """
 
+import os
+import sys
+import json
+import logging
+import argparse
+from typing import List, Tuple, Dict
+from collections import defaultdict
+
 import pandas as pd
 import swifter
 import re
-import logging
-import sys
-import argparse
-from typing import List, Tuple, Dict
 import nltk
 from nltk.stem import WordNetLemmatizer
 import spacy
@@ -78,8 +82,6 @@ from gensim import corpora
 import matplotlib.pyplot as plt
 import seaborn as sns
 import networkx as nx
-import json
-import os
 from transformers import (
     DistilBertTokenizer,
     DistilBertForSequenceClassification,
@@ -90,7 +92,6 @@ from bertopic import BERTopic
 import joblib
 import torch
 import unittest
-from collections import defaultdict
 
 # ----------------------------
 # Initialization
@@ -136,19 +137,20 @@ RELEVANT_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC"}
 # ----------------------------
 
 DEFAULT_CONFIG = {
-    'data_file': r'C:\Users\Darren\Documents\Propaganda Model Training\Propaganda_Dataset.json',  # Input JSON file path
-    'annotated_data_file': r'C:\Users\Darren\Documents\Propaganda Model Training\annotated_articles.parquet',   # Output Parquet file path
-    'propaganda_techniques_file': r'C:\Users\Darren\Documents\Propaganda Model Training\propaganda_techniques.json',  # JSON file containing propaganda techniques with keywords
-    'bias_model_file': r'C:\Users\Darren\Documents\Propaganda Model Training\media_bias_model',  # Path to the media bias model directory
-    'bias_report_file': r'C:\Users\Darren\Documents\Propaganda Model Training\media_bias_report.html',  # Report file for media bias detection
-    'threshold': 1.0,                                            # Threshold for labeling as 'Propaganda'
-    'log_file': r'C:\Users\Darren\Documents\Propaganda Model Training\propaganda_detection.log',            # Log file path
-    'report_file': r'C:\Users\Darren\Documents\Propaganda Model Training\propaganda_report.html',           # Interactive report file
-    'model_file': r'C:\Users\Darren\Documents\Propaganda Model Training\propaganda_detection_model',    # Machine learning model directory
-    'label_encoder_file': r'C:\Users\Darren\Documents\Propaganda Model Training\label_encoder.pkl',         # Label encoder file for multi-label classification
-    'num_topics': 5,                                              # Number of topics for BERTopic (configurable)
-    'misclassification_report_file': r'C:\Users\Darren\Documents\Propaganda Model Training\misclassification_report.txt',  # Misclassification report file
-    'metrics_file': r'C:\Users\Darren\Documents\Propaganda Model Training\evaluation_metrics.txt',  # Evaluation metrics file
+    'data_file': r'path\to\Propaganda_Dataset.json',  # Input JSON file path
+    'annotated_data_file': r'path\to\annotated_articles.parquet',   # Output Parquet file path
+    'propaganda_techniques_file': r'path\to\propaganda_techniques.json',  # JSON file containing propaganda techniques with keywords
+    'bias_model_file': r'models/media_bias_model',          # Path to the media bias model directory in 'models'
+    'propaganda_model_file': r'models/propaganda_detection_model',  # Path to your propaganda model
+    'label_encoder_file': r'models/label_encoder.pkl',       # Path to the label encoder
+    'bias_report_file': r'reports/media_bias_report.html',   # Report file for media bias detection
+    'propaganda_report_file': r'reports/propaganda_report.html',  # Report file for propaganda detection
+    'metrics_file': r'reports/evaluation_metrics.txt',       # Metrics file for evaluation results
+    'log_file': r'logs/propaganda_detection.log',             # Log file
+    'report_file': r'reports/propaganda_report.html',         # Interactive report file
+    'model_file': r'models/propaganda_detection_model',      # Machine learning model directory
+    'num_topics': 5,                                          # Number of topics for BERTopic (configurable)
+    'misclassification_report_file': r'reports/misclassification_report.txt',  # Misclassification report file
     'log_level': 'INFO'  # Default logging level
 }
 
@@ -396,27 +398,25 @@ def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFr
     except Exception as e:
         logging.error(f"Error generating enhanced interactive report: {type(e).__name__} - {e}")
 
-def load_bias_model(model_path: str):
-    """
-    Load the media bias detection model.
-
-    Args:
-        model_path (str): Path to the media bias detection model directory.
-
-    Returns:
-        The loaded media bias detection model.
-    """
-    # Placeholder implementation. Replace with actual model loading logic.
-    # Example for a transformer-based model:
+def load_transformer_model(model_path: str, label_encoder_path: str):
+    """Load the trained transformer model and label encoder."""
     try:
-        logging.info("Loading media bias detection model...")
+        logging.info("Loading transformer model and tokenizer...")
         tokenizer = DistilBertTokenizer.from_pretrained(model_path)
         model = DistilBertForSequenceClassification.from_pretrained(model_path)
-        model.eval()
-        logging.info(f"Loaded media bias detection model from '{model_path}'.")
-        return model, tokenizer
+        model.eval()  # Set model to evaluation mode
+        logging.info(f"Loaded transformer model from '{model_path}'.")
+
+        logging.info("Loading label encoder...")
+        mlb = joblib.load(label_encoder_path)
+        logging.info(f"Loaded label encoder from '{label_encoder_path}'.")
+
+        return model, tokenizer, mlb
+    except FileNotFoundError as e:
+        logging.error(f"Model or label encoder file not found: {e}")
+        sys.exit(1)
     except Exception as e:
-        logging.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
+        logging.error(f"Error loading model: {e}")
         sys.exit(1)
 
 def detect_media_bias(text: str, model, tokenizer, mlb, threshold: float = 0.5) -> str:
@@ -703,6 +703,121 @@ def compute_metrics(eval_pred, mlb):
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='macro', zero_division=0)
     return {'precision': precision, 'recall': recall, 'f1': f1}
 
+def load_bias_model(model_path: str):
+    """
+    Load the media bias detection model.
+
+    Args:
+        model_path (str): Path to the media bias detection model directory.
+
+    Returns:
+        Tuple[DistilBertForSequenceClassification, DistilBertTokenizer]: The loaded model and tokenizer.
+    """
+    # Placeholder implementation. Replace with actual model loading logic.
+    # Example for a transformer-based model:
+    try:
+        logging.info("Loading media bias detection model...")
+        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
+        model = DistilBertForSequenceClassification.from_pretrained(model_path)
+        model.eval()
+        logging.info(f"Loaded media bias detection model from '{model_path}'.")
+        return model, tokenizer
+    except Exception as e:
+        logging.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
+        sys.exit(1)
+
+def predict_with_transformer(
+    model: DistilBertForSequenceClassification,
+    tokenizer: DistilBertTokenizer,
+    mlb: MultiLabelBinarizer,
+    texts: List[str],
+    threshold: float = 0.5
+) -> List[List[str]]:
+    """
+    Predict propaganda techniques using the trained transformer model.
+
+    Args:
+        model (DistilBertForSequenceClassification): The trained transformer model.
+        tokenizer (DistilBertTokenizer): The tokenizer.
+        mlb (MultiLabelBinarizer): The label binarizer.
+        texts (List[str]): A list of preprocessed texts.
+        threshold (float): Threshold for classification.
+
+    Returns:
+        List[List[str]]: A list of predicted propaganda techniques for each text.
+    """
+    try:
+        logging.info("Starting prediction with transformer model...")
+        predictions = []
+        model.to('cpu')  # Ensure model is on CPU for prediction
+        for text in tqdm(texts, desc="Predicting"):
+            inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+            with torch.no_grad():
+                outputs = model(**inputs)
+                logits = outputs.logits
+                probs = torch.sigmoid(logits).numpy()[0]
+                labels = (probs > threshold).astype(int)
+                predicted = mlb.inverse_transform([labels])[0]
+                predictions.append(list(predicted))
+        logging.info("Completed predictions with transformer model.")
+        return predictions
+    except Exception as e:
+        logging.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
+        return [[] for _ in texts]
+
+def perform_semi_supervised_learning(
+    df: pd.DataFrame,
+    model: DistilBertForSequenceClassification,
+    tokenizer: DistilBertTokenizer,
+    mlb: MultiLabelBinarizer,
+    threshold: float = 0.9
+) -> pd.DataFrame:
+    """
+    Perform semi-supervised learning by labeling unlabeled data with high-confidence predictions.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing article data.
+        model (DistilBertForSequenceClassification): The trained transformer model.
+        tokenizer (DistilBertTokenizer): The tokenizer.
+        mlb (MultiLabelBinarizer): The label binarizer.
+        threshold (float): Confidence threshold for selecting pseudo-labeled data.
+
+    Returns:
+        pd.DataFrame: The augmented DataFrame with pseudo-labeled data.
+    """
+    try:
+        logging.info("Starting semi-supervised learning process...")
+
+        # Identify unlabeled data (assuming 'Techniques' is empty or NaN)
+        unlabeled_df = df[df['Techniques'].isnull() | (df['Techniques'].apply(len) == 0)]
+        logging.info(f"Found {len(unlabeled_df)} unlabeled articles.")
+
+        if unlabeled_df.empty:
+            logging.info("No unlabeled data found. Skipping semi-supervised learning.")
+            return df
+
+        # Predict techniques on unlabeled data
+        predictions = predict_with_transformer(model, tokenizer, mlb, unlabeled_df['processed_content'].tolist(), threshold=threshold)
+
+        # Select high-confidence predictions (assuming threshold used in prediction is sufficient)
+        pseudo_labeled_df = unlabeled_df.copy()
+        pseudo_labeled_df['Techniques'] = predictions
+        pseudo_labeled_df = pseudo_labeled_df[pseudo_labeled_df['Techniques'].apply(len) > 0]
+        logging.info(f"Selected {len(pseudo_labeled_df)} high-confidence pseudo-labeled articles.")
+
+        if pseudo_labeled_df.empty:
+            logging.info("No high-confidence pseudo-labeled data found. Skipping augmentation.")
+            return df
+
+        # Append pseudo-labeled data to the original DataFrame
+        augmented_df = pd.concat([df, pseudo_labeled_df], ignore_index=True)
+        logging.info("Augmented training data with pseudo-labeled articles.")
+
+        return augmented_df
+    except Exception as e:
+        logging.error(f"Error during semi-supervised learning: {type(e).__name__} - {e}")
+        return df
+
 # ----------------------------
 # Argument Parsing
 # ----------------------------
@@ -720,10 +835,11 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--techniques', type=str, default=DEFAULT_CONFIG['propaganda_techniques_file'], help='Path to propaganda techniques JSON file.')
     parser.add_argument('--bias_model', type=str, default=DEFAULT_CONFIG['bias_model_file'], help='Path to media bias model directory.')
     parser.add_argument('--bias_report', type=str, default=DEFAULT_CONFIG['bias_report_file'], help='Path to save media bias report.')
+    parser.add_argument('--propaganda_report', type=str, default=DEFAULT_CONFIG['propaganda_report_file'], help='Path to save propaganda report.')
     parser.add_argument('--threshold', type=float, default=DEFAULT_CONFIG['threshold'], help='Threshold for labeling as Propaganda.')
     parser.add_argument('--log', type=str, default=DEFAULT_CONFIG['log_file'], help='Path to log file.')
     parser.add_argument('--report', type=str, default=DEFAULT_CONFIG['report_file'], help='Path to interactive report HTML file.')
-    parser.add_argument('--model', type=str, default=DEFAULT_CONFIG['model_file'], help='Path to machine learning model directory.')
+    parser.add_argument('--model', type=str, default=DEFAULT_CONFIG['model_file'], help='Path to propaganda detection model directory.')
     parser.add_argument('--label_encoder', type=str, default=DEFAULT_CONFIG['label_encoder_file'], help='Path to label encoder file.')
     parser.add_argument('--num_topics', type=int, default=DEFAULT_CONFIG['num_topics'], help='Number of topics for BERTopic.')
     parser.add_argument('--misclassification_report', type=str, default=DEFAULT_CONFIG['misclassification_report_file'], help='Path to misclassification report file.')
@@ -819,7 +935,7 @@ def main():
     logging.info("Loading trained transformer model and label encoder...")
     model, tokenizer, mlb = load_transformer_model(args.model, args.label_encoder)
 
-    # Predict using transformer model
+    # Predict propaganda techniques for each article
     logging.info("Predicting propaganda techniques on processed data...")
     try:
         df['Predicted_Techniques'] = predict_with_transformer(model, tokenizer, mlb, df['processed_content'].tolist(), threshold=0.5)
@@ -859,49 +975,6 @@ def main():
 
     logging.info("Completed topic modeling.")
 
-    # Perform Semi-Supervised Learning
-    logging.info("Performing semi-supervised learning to augment training data...")
-    df = perform_semi_supervised_learning(df, model, tokenizer, mlb, threshold=0.9)
-
-    # Retrain the model with augmented data
-    logging.info("Retraining transformer model with augmented data...")
-    train_transformer_model(df, args.model, args.label_encoder)
-
-    # Reload the updated model
-    model, tokenizer, mlb = load_transformer_model(args.model, args.label_encoder)
-
-    # Re-predict with the updated model
-    logging.info("Re-predicting propaganda techniques on processed data with updated transformer model...")
-    df['Predicted_Techniques'] = predict_with_transformer(model, tokenizer, mlb, df['processed_content'].tolist(), threshold=0.5)
-    logging.info("Completed re-predictions with updated transformer model.")
-
-    # Topic Modeling with BERTopic after retraining
-    logging.info("Re-running topic modeling with updated model...")
-    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
-
-    # Assign topics again
-    if not topic_info.empty and topic_model_instance is not None:
-        try:
-            topics, _ = topic_model_instance.transform(df['processed_content'].tolist())
-            if len(topics) != len(df):
-                logging.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(df)}). Adjusting list length.")
-                if len(topics) > len(df):
-                    topics = topics[:len(df)]
-                    logging.warning(f"Trimmed topics list to match the number of documents ({len(df)}).")
-                else:
-                    topics = list(topics) + [None] * (len(df) - len(topics))
-                    logging.warning(f"Padded topics list with 'None' to match the number of documents ({len(df)}).")
-            df['Topics'] = topics
-            logging.info("Re-assigned topics to all documents.")
-        except Exception as e:
-            logging.error(f"Error during topic assignment: {type(e).__name__} - {e}")
-            df['Topics'] = None
-    else:
-        df['Topics'] = None
-        logging.warning("Topic modeling did not complete successfully after retraining. 'Topics' column set to None.")
-
-    logging.info("Completed topic modeling after retraining.")
-
     # Media Bias Detection
     logging.info("Starting media bias detection...")
     # Load media bias detection model
@@ -926,7 +999,7 @@ def main():
     # Predict bias for each article
     logging.info("Detecting media bias in articles...")
     try:
-        df['Bias_Category'] = df['content'].apply(lambda x: detect_media_bias(x, bias_model, bias_tokenizer, bias_mlb, threshold=0.5))
+        df['Bias_Category'] = df['processed_content'].apply(lambda x: detect_media_bias(x, bias_model, bias_tokenizer, bias_mlb, threshold=0.5))
         logging.info("Completed media bias detection.")
     except Exception as e:
         logging.error(f"Error during media bias detection: {type(e).__name__} - {e}")
@@ -935,7 +1008,7 @@ def main():
     # Generate Media Bias Report
     generate_media_bias_report(df, args.bias_report)
 
-    # Topic Modeling with BERTopic
+    # Topic Modeling with BERTopic (if needed again)
     logging.info("Starting topic modeling with BERTopic...")
     topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
 
@@ -982,7 +1055,7 @@ def main():
     df['Predicted_Techniques'] = predict_with_transformer(model, tokenizer, mlb, df['processed_content'].tolist(), threshold=0.5)
     logging.info("Completed re-predictions with updated transformer model.")
 
-    # Re-running topic modeling with updated model
+    # Re-running topic modeling with updated model (optional)
     logging.info("Re-running topic modeling with updated model...")
     topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
 
