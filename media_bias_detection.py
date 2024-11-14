@@ -2,15 +2,16 @@
 # -*- coding: utf-8 -*-
 
 """
-Enhanced Propaganda Detection Script
-====================================
+Enhanced Propaganda and Media Bias Detection Script
+====================================================
 
-This script detects propaganda in articles by analyzing their content using machine learning models,
-topic modeling, and Named Entity Recognition (NER). It leverages specific propaganda techniques
-provided by the user through a JSON file and utilizes JSON data for model training.
+This script detects propaganda and media bias in articles by analyzing their content using machine learning models,
+topic modeling, and Named Entity Recognition (NER). It leverages specific propaganda techniques and media bias
+categories provided by the user through JSON files and utilizes JSON data for model training.
 
 Features:
 - Integration of specific propaganda techniques with associated keywords provided by the user
+- Integration of media bias detection using a pre-trained model
 - Processing of articles and annotations from JSON files
 - Optimized text processing with spaCy
 - Parallel processing with swifter with fallback to standard apply
@@ -24,6 +25,7 @@ Features:
 - Multi-label classification
 - Named Entity Recognition (NER) with detailed error logging and filtering
 - Detection of specific propaganda techniques based on JSON-labeled data with keyword tracking
+- Media bias detection with detailed reporting
 - Interactive report generation with enhanced error handling and detailed insights
 - Improved misclassification analysis
 - Automated evaluation metrics
@@ -137,6 +139,8 @@ DEFAULT_CONFIG = {
     'data_file': r'C:\Users\Darren\Documents\Propaganda Model Training\Propaganda_Dataset.json',  # Input JSON file path
     'annotated_data_file': r'C:\Users\Darren\Documents\Propaganda Model Training\annotated_articles.parquet',   # Output Parquet file path
     'propaganda_techniques_file': r'C:\Users\Darren\Documents\Propaganda Model Training\propaganda_techniques.json',  # JSON file containing propaganda techniques with keywords
+    'bias_model_file': r'C:\Users\Darren\Documents\Propaganda Model Training\media_bias_model',  # Path to the media bias model directory
+    'bias_report_file': r'C:\Users\Darren\Documents\Propaganda Model Training\media_bias_report.html',  # Report file for media bias detection
     'threshold': 1.0,                                            # Threshold for labeling as 'Propaganda'
     'log_file': r'C:\Users\Darren\Documents\Propaganda Model Training\propaganda_detection.log',            # Log file path
     'report_file': r'C:\Users\Darren\Documents\Propaganda Model Training\propaganda_report.html',           # Interactive report file
@@ -144,6 +148,7 @@ DEFAULT_CONFIG = {
     'label_encoder_file': r'C:\Users\Darren\Documents\Propaganda Model Training\label_encoder.pkl',         # Label encoder file for multi-label classification
     'num_topics': 5,                                              # Number of topics for BERTopic (configurable)
     'misclassification_report_file': r'C:\Users\Darren\Documents\Propaganda Model Training\misclassification_report.txt',  # Misclassification report file
+    'metrics_file': r'C:\Users\Darren\Documents\Propaganda Model Training\evaluation_metrics.txt',  # Evaluation metrics file
     'log_level': 'INFO'  # Default logging level
 }
 
@@ -169,6 +174,10 @@ def setup_logging(log_file: str, log_level: str):
         ch.setLevel(logging.DEBUG)
     elif log_level.upper() == 'WARNING':
         ch.setLevel(logging.WARNING)
+    elif log_level.upper() == 'ERROR':
+        ch.setLevel(logging.ERROR)
+    elif log_level.upper() == 'CRITICAL':
+        ch.setLevel(logging.CRITICAL)
     else:
         ch.setLevel(logging.INFO)
     ch_formatter = logging.Formatter('%(levelname)s - %(message)s')
@@ -387,6 +396,169 @@ def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFr
     except Exception as e:
         logging.error(f"Error generating enhanced interactive report: {type(e).__name__} - {e}")
 
+def load_bias_model(model_path: str):
+    """
+    Load the media bias detection model.
+
+    Args:
+        model_path (str): Path to the media bias detection model directory.
+
+    Returns:
+        The loaded media bias detection model.
+    """
+    # Placeholder implementation. Replace with actual model loading logic.
+    # Example for a transformer-based model:
+    try:
+        logging.info("Loading media bias detection model...")
+        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
+        model = DistilBertForSequenceClassification.from_pretrained(model_path)
+        model.eval()
+        logging.info(f"Loaded media bias detection model from '{model_path}'.")
+        return model, tokenizer
+    except Exception as e:
+        logging.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
+        sys.exit(1)
+
+def detect_media_bias(text: str, model, tokenizer, mlb, threshold: float = 0.5) -> str:
+    """
+    Run media bias detection on a given text.
+
+    Args:
+        text (str): The input text to detect bias.
+        model: The pre-trained model for media bias detection.
+        tokenizer: The tokenizer for the bias detection model.
+        mlb: MultiLabelBinarizer for bias categories.
+        threshold (float): Threshold for classification.
+
+    Returns:
+        str: Predicted bias category or score.
+    """
+    try:
+        inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+        with torch.no_grad():
+            outputs = model(**inputs)
+            logits = outputs.logits
+            probs = torch.sigmoid(logits).numpy()[0]
+            label_idx = (probs > threshold).astype(int)
+            predicted = mlb.inverse_transform([label_idx])[0]
+            bias_category = predicted[0] if predicted else "Neutral"
+        return bias_category
+    except Exception as e:
+        logging.error(f"Error during media bias detection for text: {text[:50]}... - {type(e).__name__} - {e}")
+        return "Unknown"
+
+def generate_media_bias_report(df: pd.DataFrame, report_file: str):
+    """
+    Generate an HTML report summarizing media bias results.
+
+    Args:
+        df (pd.DataFrame): DataFrame with bias results.
+        report_file (str): Path to the HTML report.
+    """
+    try:
+        logging.info("Generating media bias report...")
+
+        # Summarize bias distribution
+        bias_summary = df['Bias_Category'].value_counts().to_dict()
+        summary_html = "".join([f"<li>{k}: {v}</li>" for k, v in bias_summary.items()])
+
+        # Generate HTML Report
+        with open(report_file, 'w', encoding='utf-8') as f:
+            f.write(f"""
+            <html>
+            <head><title>Media Bias Detection Report</title></head>
+            <body>
+                <h1>Media Bias Detection Report</h1>
+                <h2>Bias Distribution</h2>
+                <ul>{summary_html}</ul>
+                <h2>Detailed Bias in Articles</h2>
+                {df[['article_id', 'Bias_Category']].to_html(index=False)}
+            </body>
+            </html>
+            """)
+        logging.info(f"Media bias report generated at '{report_file}'.")
+    except Exception as e:
+        logging.error(f"Error generating media bias report: {type(e).__name__} - {e}")
+
+def generate_evaluation_metrics(df: pd.DataFrame, mlb: MultiLabelBinarizer, metrics_file: str):
+    """
+    Automatically calculate and save classification metrics.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing true and predicted labels.
+        mlb (MultiLabelBinarizer): The label binarizer.
+        metrics_file (str): Path to save the metrics report.
+    """
+    try:
+        logging.info("Calculating automated evaluation metrics...")
+        y_true = mlb.transform(df['Techniques'])
+        y_pred = mlb.transform(df['Predicted_Techniques'])
+
+        accuracy = accuracy_score(y_true, y_pred)
+        hamming = hamming_loss(y_true, y_pred)
+        report = classification_report(y_true, y_pred, target_names=mlb.classes_, zero_division=0)
+        f1 = f1_score(y_true, y_pred, average='macro')
+
+        # Save metrics to a text file
+        with open(metrics_file, 'w') as f:
+            f.write("Automated Evaluation Metrics\n")
+            f.write("============================\n\n")
+            f.write(f"Accuracy: {accuracy:.4f}\n")
+            f.write(f"Hamming Loss: {hamming:.4f}\n")
+            f.write(f"Average F1 Score: {f1:.4f}\n\n")
+            f.write("Classification Report:\n")
+            f.write(report)
+
+        logging.info(f"Automated evaluation metrics saved to '{metrics_file}'.")
+    except Exception as e:
+        logging.error(f"Error calculating evaluation metrics: {type(e).__name__} - {e}")
+
+def perform_detailed_misclassification_analysis(
+    y_true,
+    y_pred,
+    mlb: MultiLabelBinarizer,
+    report_file: str
+):
+    """
+    Analyze misclassifications to identify common errors, including top misclassified techniques.
+
+    Args:
+        y_true (np.ndarray): True labels.
+        y_pred (np.ndarray): Predicted labels.
+        mlb (MultiLabelBinarizer): Label binarizer.
+        report_file (str): Path to save the misclassification report.
+    """
+    try:
+        logging.info("Starting detailed misclassification analysis...")
+        false_positives = defaultdict(int)
+        false_negatives = defaultdict(int)
+
+        for true, pred in zip(y_true, y_pred):
+            for idx, (t, p) in enumerate(zip(true, pred)):
+                if p and not t:
+                    false_positives[mlb.classes_[idx]] += 1
+                elif t and not p:
+                    false_negatives[mlb.classes_[idx]] += 1
+
+        # Identify top misclassified techniques
+        top_false_positives = sorted(false_positives.items(), key=lambda x: x[1], reverse=True)[:5]
+        top_false_negatives = sorted(false_negatives.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        # Save the analysis to a file
+        with open(report_file, 'w') as f:
+            f.write("Detailed Misclassification Analysis Report\n")
+            f.write("==========================================\n\n")
+            f.write("Top False Positives:\n")
+            for technique, count in top_false_positives:
+                f.write(f"- {technique}: {count}\n")
+            f.write("\nTop False Negatives:\n")
+            for technique, count in top_false_negatives:
+                f.write(f"- {technique}: {count}\n")
+        
+        logging.info(f"Detailed misclassification analysis saved to '{report_file}'.")
+    except Exception as e:
+        logging.error(f"Error during detailed misclassification analysis: {type(e).__name__} - {e}")
+
 # ----------------------------
 # Machine Learning Functions
 # ----------------------------
@@ -504,7 +676,12 @@ def train_transformer_model(df: pd.DataFrame, model_save_path: str, label_encode
         logging.info(f"Transformer model saved to '{model_save_path}'.")
 
         # Perform misclassification analysis
-        misclassification_analysis(true_labels, predictions, mlb, DEFAULT_CONFIG['misclassification_report_file'])
+        perform_detailed_misclassification_analysis(
+            y_true=true_labels,
+            y_pred=predictions,
+            mlb=mlb,
+            report_file=DEFAULT_CONFIG['misclassification_report_file']
+        )
 
     except Exception as e:
         logging.error(f"Error training transformer model: {type(e).__name__} - {e}")
@@ -526,527 +703,6 @@ def compute_metrics(eval_pred, mlb):
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='macro', zero_division=0)
     return {'precision': precision, 'recall': recall, 'f1': f1}
 
-def misclassification_analysis(y_true, y_pred, mlb, report_file: str):
-    """
-    Analyze misclassifications to identify common errors.
-
-    Args:
-        y_true (np.ndarray): True labels.
-        y_pred (np.ndarray): Predicted labels.
-        mlb (MultiLabelBinarizer): Label binarizer.
-        report_file (str): Path to save the misclassification report.
-    """
-    try:
-        logging.info("Starting misclassification analysis...")
-        false_positives = defaultdict(int)
-        false_negatives = defaultdict(int)
-
-        for true, pred in zip(y_true, y_pred):
-            for idx, (t, p) in enumerate(zip(true, pred)):
-                if p and not t:
-                    false_positives[mlb.classes_[idx]] += 1
-                elif t and not p:
-                    false_negatives[mlb.classes_[idx]] += 1
-
-        # Identify top misclassified techniques
-        top_false_positives = sorted(false_positives.items(), key=lambda x: x[1], reverse=True)[:5]
-        top_false_negatives = sorted(false_negatives.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        # Save the analysis to a file
-        with open(report_file, 'w') as f:
-            f.write("Misclassification Analysis Report\n")
-            f.write("==================================\n\n")
-            f.write("Top False Positives:\n")
-            for technique, count in top_false_positives:
-                f.write(f"- {technique}: {count}\n")
-            f.write("\nTop False Negatives:\n")
-            for technique, count in top_false_negatives:
-                f.write(f"- {technique}: {count}\n")
-        
-        logging.info(f"Misclassification analysis saved to '{report_file}'.")
-    except Exception as e:
-        logging.error(f"Error during misclassification analysis: {type(e).__name__} - {e}")
-
-def load_transformer_model(model_path: str, label_encoder_file: str):
-    """
-    Load the trained transformer model and label encoder.
-
-    Args:
-        model_path (str): Path to the trained model.
-        label_encoder_file (str): Path to the label encoder file.
-
-    Returns:
-        Tuple[DistilBertForSequenceClassification, DistilBertTokenizer, MultiLabelBinarizer]:
-            - model: The trained transformer model.
-            - tokenizer: The tokenizer.
-            - mlb: The label binarizer.
-    """
-    try:
-        logging.info("Loading transformer model and tokenizer...")
-        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
-        model = DistilBertForSequenceClassification.from_pretrained(model_path)
-        model.eval()
-        logging.info(f"Loaded transformer model from '{model_path}'.")
-
-        logging.info("Loading label encoder...")
-        mlb = joblib.load(label_encoder_file)
-        logging.info(f"Loaded label encoder from '{label_encoder_file}'.")
-
-        return model, tokenizer, mlb
-    except FileNotFoundError:
-        logging.error(f"Model directory '{model_path}' or label encoder file '{label_encoder_file}' not found.")
-        sys.exit(1)
-    except Exception as e:
-        logging.error(f"Error loading transformer model: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-def predict_with_transformer(
-    model: DistilBertForSequenceClassification,
-    tokenizer: DistilBertTokenizer,
-    mlb: MultiLabelBinarizer,
-    texts: List[str],
-    threshold: float = 0.5
-) -> List[List[str]]:
-    """
-    Predict propaganda techniques using the trained transformer model.
-
-    Args:
-        model (DistilBertForSequenceClassification): The trained transformer model.
-        tokenizer (DistilBertTokenizer): The tokenizer.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        texts (List[str]): A list of preprocessed texts.
-        threshold (float): Threshold for classification.
-
-    Returns:
-        List[List[str]]: A list of predicted propaganda techniques for each text.
-    """
-    try:
-        logging.info("Starting prediction with transformer model...")
-        predictions = []
-        model.to('cpu')  # Ensure model is on CPU for prediction
-        for text in tqdm(texts, desc="Predicting"):
-            inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-            with torch.no_grad():
-                outputs = model(**inputs)
-                logits = outputs.logits
-                probs = torch.sigmoid(logits).numpy()[0]
-                labels = (probs > threshold).astype(int)
-                predicted = mlb.inverse_transform([labels])[0]
-                predictions.append(list(predicted))
-        logging.info("Completed predictions with transformer model.")
-        return predictions
-    except Exception as e:
-        logging.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
-        return [[] for _ in texts]
-
-def perform_semi_supervised_learning(
-    df: pd.DataFrame,
-    model: DistilBertForSequenceClassification,
-    tokenizer: DistilBertTokenizer,
-    mlb: MultiLabelBinarizer,
-    threshold: float = 0.9
-) -> pd.DataFrame:
-    """
-    Perform semi-supervised learning by labeling unlabeled data with high-confidence predictions.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing article data.
-        model (DistilBertForSequenceClassification): The trained transformer model.
-        tokenizer (DistilBertTokenizer): The tokenizer.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        threshold (float): Confidence threshold for selecting pseudo-labeled data.
-
-    Returns:
-        pd.DataFrame: The augmented DataFrame with pseudo-labeled data.
-    """
-    try:
-        logging.info("Starting semi-supervised learning process...")
-
-        # Identify unlabeled data (assuming 'Techniques' is empty or NaN)
-        unlabeled_df = df[df['Techniques'].isnull() | (df['Techniques'].apply(len) == 0)]
-        logging.info(f"Found {len(unlabeled_df)} unlabeled articles.")
-
-        if unlabeled_df.empty:
-            logging.info("No unlabeled data found. Skipping semi-supervised learning.")
-            return df
-
-        # Predict techniques on unlabeled data
-        predictions = predict_with_transformer(model, tokenizer, mlb, unlabeled_df['processed_content'].tolist(), threshold=threshold)
-
-        # Select high-confidence predictions (assuming threshold used in prediction is sufficient)
-        pseudo_labeled_df = unlabeled_df.copy()
-        pseudo_labeled_df['Techniques'] = predictions
-        pseudo_labeled_df = pseudo_labeled_df[pseudo_labeled_df['Techniques'].apply(len) > 0]
-        logging.info(f"Selected {len(pseudo_labeled_df)} high-confidence pseudo-labeled articles.")
-
-        if pseudo_labeled_df.empty:
-            logging.info("No high-confidence pseudo-labeled data found. Skipping augmentation.")
-            return df
-
-        # Append pseudo-labeled data to the original DataFrame
-        augmented_df = pd.concat([df, pseudo_labeled_df], ignore_index=True)
-        logging.info("Augmented training data with pseudo-labeled articles.")
-
-        return augmented_df
-    except Exception as e:
-        logging.error(f"Error during semi-supervised learning: {type(e).__name__} - {e}")
-        return df
-
-def generate_evaluation_metrics(df: pd.DataFrame, mlb: MultiLabelBinarizer, metrics_file: str):
-    """
-    Automatically calculate and save classification metrics.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing true and predicted labels.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        metrics_file (str): Path to save the metrics report.
-    """
-    try:
-        logging.info("Calculating automated evaluation metrics...")
-        y_true = mlb.transform(df['Techniques'])
-        y_pred = mlb.transform(df['Predicted_Techniques'])
-
-        accuracy = accuracy_score(y_true, y_pred)
-        hamming = hamming_loss(y_true, y_pred)
-        report = classification_report(y_true, y_pred, target_names=mlb.classes_, zero_division=0)
-        f1 = f1_score(y_true, y_pred, average='macro')
-
-        # Save metrics to a text file
-        with open(metrics_file, 'w') as f:
-            f.write("Automated Evaluation Metrics\n")
-            f.write("============================\n\n")
-            f.write(f"Accuracy: {accuracy:.4f}\n")
-            f.write(f"Hamming Loss: {hamming:.4f}\n")
-            f.write(f"Average F1 Score: {f1:.4f}\n\n")
-            f.write("Classification Report:\n")
-            f.write(report)
-
-        logging.info(f"Automated evaluation metrics saved to '{metrics_file}'.")
-    except Exception as e:
-        logging.error(f"Error calculating evaluation metrics: {type(e).__name__} - {e}")
-
-def perform_misclassification_analysis(
-    y_true,
-    y_pred,
-    mlb: MultiLabelBinarizer,
-    report_file: str
-):
-    """
-    Analyze misclassifications to identify common errors, including top misclassified techniques.
-
-    Args:
-        y_true (np.ndarray): True labels.
-        y_pred (np.ndarray): Predicted labels.
-        mlb (MultiLabelBinarizer): Label binarizer.
-        report_file (str): Path to save the misclassification report.
-    """
-    try:
-        logging.info("Starting detailed misclassification analysis...")
-        false_positives = defaultdict(int)
-        false_negatives = defaultdict(int)
-
-        for true, pred in zip(y_true, y_pred):
-            for idx, (t, p) in enumerate(zip(true, pred)):
-                if p and not t:
-                    false_positives[mlb.classes_[idx]] += 1
-                elif t and not p:
-                    false_negatives[mlb.classes_[idx]] += 1
-
-        # Identify top misclassified techniques
-        top_false_positives = sorted(false_positives.items(), key=lambda x: x[1], reverse=True)[:5]
-        top_false_negatives = sorted(false_negatives.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        # Save the analysis to a file
-        with open(report_file, 'w') as f:
-            f.write("Detailed Misclassification Analysis Report\n")
-            f.write("==========================================\n\n")
-            f.write("Top False Positives:\n")
-            for technique, count in top_false_positives:
-                f.write(f"- {technique}: {count}\n")
-            f.write("\nTop False Negatives:\n")
-            for technique, count in top_false_negatives:
-                f.write(f"- {technique}: {count}\n")
-        
-        logging.info(f"Detailed misclassification analysis saved to '{report_file}'.")
-    except Exception as e:
-        logging.error(f"Error during detailed misclassification analysis: {type(e).__name__} - {e}")
-
-def load_transformer_model(model_path: str, label_encoder_file: str):
-    """
-    Load the trained transformer model and label encoder.
-
-    Args:
-        model_path (str): Path to the trained model.
-        label_encoder_file (str): Path to the label encoder file.
-
-    Returns:
-        Tuple[DistilBertForSequenceClassification, DistilBertTokenizer, MultiLabelBinarizer]:
-            - model: The trained transformer model.
-            - tokenizer: The tokenizer.
-            - mlb: The label binarizer.
-    """
-    try:
-        logging.info("Loading transformer model and tokenizer...")
-        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
-        model = DistilBertForSequenceClassification.from_pretrained(model_path)
-        model.eval()
-        logging.info(f"Loaded transformer model from '{model_path}'.")
-
-        logging.info("Loading label encoder...")
-        mlb = joblib.load(label_encoder_file)
-        logging.info(f"Loaded label encoder from '{label_encoder_file}'.")
-
-        return model, tokenizer, mlb
-    except FileNotFoundError:
-        logging.error(f"Model directory '{model_path}' or label encoder file '{label_encoder_file}' not found.")
-        sys.exit(1)
-    except Exception as e:
-        logging.error(f"Error loading transformer model: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-def predict_with_transformer(
-    model: DistilBertForSequenceClassification,
-    tokenizer: DistilBertTokenizer,
-    mlb: MultiLabelBinarizer,
-    texts: List[str],
-    threshold: float = 0.5
-) -> List[List[str]]:
-    """
-    Predict propaganda techniques using the trained transformer model.
-
-    Args:
-        model (DistilBertForSequenceClassification): The trained transformer model.
-        tokenizer (DistilBertTokenizer): The tokenizer.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        texts (List[str]): A list of preprocessed texts.
-        threshold (float): Threshold for classification.
-
-    Returns:
-        List[List[str]]: A list of predicted propaganda techniques for each text.
-    """
-    try:
-        logging.info("Starting prediction with transformer model...")
-        predictions = []
-        model.to('cpu')  # Ensure model is on CPU for prediction
-        for text in tqdm(texts, desc="Predicting"):
-            inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-            with torch.no_grad():
-                outputs = model(**inputs)
-                logits = outputs.logits
-                probs = torch.sigmoid(logits).numpy()[0]
-                labels = (probs > threshold).astype(int)
-                predicted = mlb.inverse_transform([labels])[0]
-                predictions.append(list(predicted))
-        logging.info("Completed predictions with transformer model.")
-        return predictions
-    except Exception as e:
-        logging.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
-        return [[] for _ in texts]
-
-def perform_semi_supervised_learning(
-    df: pd.DataFrame,
-    model: DistilBertForSequenceClassification,
-    tokenizer: DistilBertTokenizer,
-    mlb: MultiLabelBinarizer,
-    threshold: float = 0.9
-) -> pd.DataFrame:
-    """
-    Perform semi-supervised learning by labeling unlabeled data with high-confidence predictions.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing article data.
-        model (DistilBertForSequenceClassification): The trained transformer model.
-        tokenizer (DistilBertTokenizer): The tokenizer.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        threshold (float): Confidence threshold for selecting pseudo-labeled data.
-
-    Returns:
-        pd.DataFrame: The augmented DataFrame with pseudo-labeled data.
-    """
-    try:
-        logging.info("Starting semi-supervised learning process...")
-
-        # Identify unlabeled data (assuming 'Techniques' is empty or NaN)
-        unlabeled_df = df[df['Techniques'].isnull() | (df['Techniques'].apply(len) == 0)]
-        logging.info(f"Found {len(unlabeled_df)} unlabeled articles.")
-
-        if unlabeled_df.empty:
-            logging.info("No unlabeled data found. Skipping semi-supervised learning.")
-            return df
-
-        # Predict techniques on unlabeled data
-        predictions = predict_with_transformer(model, tokenizer, mlb, unlabeled_df['processed_content'].tolist(), threshold=threshold)
-
-        # Select high-confidence predictions (assuming threshold used in prediction is sufficient)
-        pseudo_labeled_df = unlabeled_df.copy()
-        pseudo_labeled_df['Techniques'] = predictions
-        pseudo_labeled_df = pseudo_labeled_df[pseudo_labeled_df['Techniques'].apply(len) > 0]
-        logging.info(f"Selected {len(pseudo_labeled_df)} high-confidence pseudo-labeled articles.")
-
-        if pseudo_labeled_df.empty:
-            logging.info("No high-confidence pseudo-labeled data found. Skipping augmentation.")
-            return df
-
-        # Append pseudo-labeled data to the original DataFrame
-        augmented_df = pd.concat([df, pseudo_labeled_df], ignore_index=True)
-        logging.info("Augmented training data with pseudo-labeled articles.")
-
-        return augmented_df
-    except Exception as e:
-        logging.error(f"Error during semi-supervised learning: {type(e).__name__} - {e}")
-        return df
-
-def generate_evaluation_metrics(df: pd.DataFrame, mlb: MultiLabelBinarizer, metrics_file: str):
-    """
-    Automatically calculate and save classification metrics.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing true and predicted labels.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        metrics_file (str): Path to save the metrics report.
-    """
-    try:
-        logging.info("Calculating automated evaluation metrics...")
-        y_true = mlb.transform(df['Techniques'])
-        y_pred = mlb.transform(df['Predicted_Techniques'])
-
-        accuracy = accuracy_score(y_true, y_pred)
-        hamming = hamming_loss(y_true, y_pred)
-        report = classification_report(y_true, y_pred, target_names=mlb.classes_, zero_division=0)
-        f1 = f1_score(y_true, y_pred, average='macro')
-
-        # Save metrics to a text file
-        with open(metrics_file, 'w') as f:
-            f.write("Automated Evaluation Metrics\n")
-            f.write("============================\n\n")
-            f.write(f"Accuracy: {accuracy:.4f}\n")
-            f.write(f"Hamming Loss: {hamming:.4f}\n")
-            f.write(f"Average F1 Score: {f1:.4f}\n\n")
-            f.write("Classification Report:\n")
-            f.write(report)
-
-        logging.info(f"Automated evaluation metrics saved to '{metrics_file}'.")
-    except Exception as e:
-        logging.error(f"Error calculating evaluation metrics: {type(e).__name__} - {e}")
-
-def perform_detailed_misclassification_analysis(
-    y_true,
-    y_pred,
-    mlb: MultiLabelBinarizer,
-    report_file: str
-):
-    """
-    Analyze misclassifications to identify common errors, including top misclassified techniques.
-
-    Args:
-        y_true (np.ndarray): True labels.
-        y_pred (np.ndarray): Predicted labels.
-        mlb (MultiLabelBinarizer): Label binarizer.
-        report_file (str): Path to save the misclassification report.
-    """
-    try:
-        logging.info("Starting detailed misclassification analysis...")
-        false_positives = defaultdict(int)
-        false_negatives = defaultdict(int)
-
-        for true, pred in zip(y_true, y_pred):
-            for idx, (t, p) in enumerate(zip(true, pred)):
-                if p and not t:
-                    false_positives[mlb.classes_[idx]] += 1
-                elif t and not p:
-                    false_negatives[mlb.classes_[idx]] += 1
-
-        # Identify top misclassified techniques
-        top_false_positives = sorted(false_positives.items(), key=lambda x: x[1], reverse=True)[:5]
-        top_false_negatives = sorted(false_negatives.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        # Save the analysis to a file
-        with open(report_file, 'w') as f:
-            f.write("Detailed Misclassification Analysis Report\n")
-            f.write("==========================================\n\n")
-            f.write("Top False Positives:\n")
-            for technique, count in top_false_positives:
-                f.write(f"- {technique}: {count}\n")
-            f.write("\nTop False Negatives:\n")
-            for technique, count in top_false_negatives:
-                f.write(f"- {technique}: {count}\n")
-        
-        logging.info(f"Detailed misclassification analysis saved to '{report_file}'.")
-    except Exception as e:
-        logging.error(f"Error during detailed misclassification analysis: {type(e).__name__} - {e}")
-
-def load_transformer_model(model_path: str, label_encoder_file: str):
-    """
-    Load the trained transformer model and label encoder.
-
-    Args:
-        model_path (str): Path to the trained model.
-        label_encoder_file (str): Path to the label encoder file.
-
-    Returns:
-        Tuple[DistilBertForSequenceClassification, DistilBertTokenizer, MultiLabelBinarizer]:
-            - model: The trained transformer model.
-            - tokenizer: The tokenizer.
-            - mlb: The label binarizer.
-    """
-    try:
-        logging.info("Loading transformer model and tokenizer...")
-        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
-        model = DistilBertForSequenceClassification.from_pretrained(model_path)
-        model.eval()
-        logging.info(f"Loaded transformer model from '{model_path}'.")
-
-        logging.info("Loading label encoder...")
-        mlb = joblib.load(label_encoder_file)
-        logging.info(f"Loaded label encoder from '{label_encoder_file}'.")
-
-        return model, tokenizer, mlb
-    except FileNotFoundError:
-        logging.error(f"Model directory '{model_path}' or label encoder file '{label_encoder_file}' not found.")
-        sys.exit(1)
-    except Exception as e:
-        logging.error(f"Error loading transformer model: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-def predict_with_transformer(
-    model: DistilBertForSequenceClassification,
-    tokenizer: DistilBertTokenizer,
-    mlb: MultiLabelBinarizer,
-    texts: List[str],
-    threshold: float = 0.5
-) -> List[List[str]]:
-    """
-    Predict propaganda techniques using the trained transformer model.
-
-    Args:
-        model (DistilBertForSequenceClassification): The trained transformer model.
-        tokenizer (DistilBertTokenizer): The tokenizer.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        texts (List[str]): A list of preprocessed texts.
-        threshold (float): Threshold for classification.
-
-    Returns:
-        List[List[str]]: A list of predicted propaganda techniques for each text.
-    """
-    try:
-        logging.info("Starting prediction with transformer model...")
-        predictions = []
-        model.to('cpu')  # Ensure model is on CPU for prediction
-        for text in tqdm(texts, desc="Predicting"):
-            inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-            with torch.no_grad():
-                outputs = model(**inputs)
-                logits = outputs.logits
-                probs = torch.sigmoid(logits).numpy()[0]
-                labels = (probs > threshold).astype(int)
-                predicted = mlb.inverse_transform([labels])[0]
-                predictions.append(list(predicted))
-        logging.info("Completed predictions with transformer model.")
-        return predictions
-    except Exception as e:
-        logging.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
-        return [[] for _ in texts]
-
 # ----------------------------
 # Argument Parsing
 # ----------------------------
@@ -1058,10 +714,12 @@ def parse_arguments() -> argparse.Namespace:
     Returns:
         argparse.Namespace: The parsed arguments.
     """
-    parser = argparse.ArgumentParser(description="Enhanced Propaganda Detection in Articles.")
+    parser = argparse.ArgumentParser(description="Enhanced Propaganda and Media Bias Detection in Articles.")
     parser.add_argument('--input', type=str, default=DEFAULT_CONFIG['data_file'], help='Path to input JSON file.')
     parser.add_argument('--output', type=str, default=DEFAULT_CONFIG['annotated_data_file'], help='Path to output Parquet file.')
     parser.add_argument('--techniques', type=str, default=DEFAULT_CONFIG['propaganda_techniques_file'], help='Path to propaganda techniques JSON file.')
+    parser.add_argument('--bias_model', type=str, default=DEFAULT_CONFIG['bias_model_file'], help='Path to media bias model directory.')
+    parser.add_argument('--bias_report', type=str, default=DEFAULT_CONFIG['bias_report_file'], help='Path to save media bias report.')
     parser.add_argument('--threshold', type=float, default=DEFAULT_CONFIG['threshold'], help='Threshold for labeling as Propaganda.')
     parser.add_argument('--log', type=str, default=DEFAULT_CONFIG['log_file'], help='Path to log file.')
     parser.add_argument('--report', type=str, default=DEFAULT_CONFIG['report_file'], help='Path to interactive report HTML file.')
@@ -1069,7 +727,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--label_encoder', type=str, default=DEFAULT_CONFIG['label_encoder_file'], help='Path to label encoder file.')
     parser.add_argument('--num_topics', type=int, default=DEFAULT_CONFIG['num_topics'], help='Number of topics for BERTopic.')
     parser.add_argument('--misclassification_report', type=str, default=DEFAULT_CONFIG['misclassification_report_file'], help='Path to misclassification report file.')
-    parser.add_argument('--metrics_file', type=str, default='evaluation_metrics.txt', help='Path to save evaluation metrics.')
+    parser.add_argument('--metrics_file', type=str, default=DEFAULT_CONFIG['metrics_file'], help='Path to save evaluation metrics.')
     parser.add_argument('--log_level', type=str, default=DEFAULT_CONFIG['log_level'], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help='Logging verbosity level.')
     return parser.parse_args()
 
@@ -1086,7 +744,7 @@ def main():
 
     # Setup logging with configurable verbosity
     setup_logging(args.log, args.log_level)
-    logging.info("Starting Enhanced Propaganda Detection Script")
+    logging.info("Starting Enhanced Propaganda and Media Bias Detection Script")
 
     # Validate input file
     if not args.input.lower().endswith('.json'):
@@ -1244,6 +902,113 @@ def main():
 
     logging.info("Completed topic modeling after retraining.")
 
+    # Media Bias Detection
+    logging.info("Starting media bias detection...")
+    # Load media bias detection model
+    bias_model, bias_tokenizer = load_bias_model(args.bias_model)
+
+    # Load or define MultiLabelBinarizer for media bias categories
+    # This assumes you have a label encoder for media bias similar to propaganda techniques
+    # If media bias is single-label classification, adjust accordingly
+    bias_mlb_file = os.path.join(args.bias_model, 'bias_label_encoder.pkl')
+    if os.path.exists(bias_mlb_file):
+        bias_mlb = joblib.load(bias_mlb_file)
+        logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
+    else:
+        # If not present, define a default label encoder or handle as needed
+        logging.warning(f"Media bias label encoder file '{bias_mlb_file}' not found. Using default encoder.")
+        bias_categories = ["Left", "Center", "Right", "Unknown"]
+        bias_mlb = MultiLabelBinarizer(classes=bias_categories)
+        bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
+        joblib.dump(bias_mlb, bias_mlb_file)
+        logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
+
+    # Predict bias for each article
+    logging.info("Detecting media bias in articles...")
+    try:
+        df['Bias_Category'] = df['content'].apply(lambda x: detect_media_bias(x, bias_model, bias_tokenizer, bias_mlb, threshold=0.5))
+        logging.info("Completed media bias detection.")
+    except Exception as e:
+        logging.error(f"Error during media bias detection: {type(e).__name__} - {e}")
+        df['Bias_Category'] = "Unknown"
+
+    # Generate Media Bias Report
+    generate_media_bias_report(df, args.bias_report)
+
+    # Topic Modeling with BERTopic
+    logging.info("Starting topic modeling with BERTopic...")
+    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
+
+    # Handle cases where topic modeling failed
+    if topic_info.empty and topic_freq.empty:
+        logging.warning("BERTopic modeling did not produce any topics. Check input data or model configuration.")
+
+    if not topic_info.empty and topic_model_instance is not None:
+        # Ensure that the number of topics matches the number of documents
+        try:
+            topics, _ = topic_model_instance.transform(df['processed_content'].tolist())
+            if len(topics) != len(df):
+                logging.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(df)}). Adjusting list length.")
+                if len(topics) > len(df):
+                    topics = topics[:len(df)]
+                    logging.warning(f"Trimmed topics list to match the number of documents ({len(df)}).")
+                else:
+                    topics = list(topics) + [None] * (len(df) - len(topics))
+                    logging.warning(f"Padded topics list with 'None' to match the number of documents ({len(df)}).")
+            df['Topics'] = topics
+            logging.info("Assigned topics to all documents.")
+        except Exception as e:
+            logging.error(f"Error during topic assignment: {type(e).__name__} - {e}")
+            df['Topics'] = None
+    else:
+        df['Topics'] = None
+        logging.warning("Topic modeling did not complete successfully. 'Topics' column set to None.")
+
+    logging.info("Completed topic modeling.")
+
+    # Perform Semi-Supervised Learning
+    logging.info("Performing semi-supervised learning to augment training data...")
+    df = perform_semi_supervised_learning(df, model, tokenizer, mlb, threshold=0.9)
+
+    # Retrain the model with augmented data
+    logging.info("Retraining transformer model with augmented data...")
+    train_transformer_model(df, args.model, args.label_encoder)
+
+    # Reload the updated model
+    model, tokenizer, mlb = load_transformer_model(args.model, args.label_encoder)
+
+    # Re-predict with the updated model
+    logging.info("Re-predicting propaganda techniques on processed data with updated transformer model...")
+    df['Predicted_Techniques'] = predict_with_transformer(model, tokenizer, mlb, df['processed_content'].tolist(), threshold=0.5)
+    logging.info("Completed re-predictions with updated transformer model.")
+
+    # Re-running topic modeling with updated model
+    logging.info("Re-running topic modeling with updated model...")
+    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
+
+    # Assign topics again
+    if not topic_info.empty and topic_model_instance is not None:
+        try:
+            topics, _ = topic_model_instance.transform(df['processed_content'].tolist())
+            if len(topics) != len(df):
+                logging.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(df)}). Adjusting list length.")
+                if len(topics) > len(df):
+                    topics = topics[:len(df)]
+                    logging.warning(f"Trimmed topics list to match the number of documents ({len(df)}).")
+                else:
+                    topics = list(topics) + [None] * (len(df) - len(topics))
+                    logging.warning(f"Padded topics list with 'None' to match the number of documents ({len(df)}).")
+            df['Topics'] = topics
+            logging.info("Re-assigned topics to all documents.")
+        except Exception as e:
+            logging.error(f"Error during topic assignment: {type(e).__name__} - {e}")
+            df['Topics'] = None
+    else:
+        df['Topics'] = None
+        logging.warning("Topic modeling did not complete successfully after retraining. 'Topics' column set to None.")
+
+    logging.info("Completed topic modeling after retraining.")
+
     # Generate Enhanced Interactive Report
     try:
         generate_enhanced_interactive_report(df, topic_info, args.report)
@@ -1255,10 +1020,10 @@ def main():
 
     # Perform detailed misclassification analysis
     perform_detailed_misclassification_analysis(
-        mlb.transform(df['Techniques']),
-        mlb.transform(df['Predicted_Techniques']),
-        mlb,
-        args.misclassification_report
+        y_true=mlb.transform(df['Techniques']),
+        y_pred=mlb.transform(df['Predicted_Techniques']),
+        mlb=mlb,
+        report_file=args.misclassification_report
     )
 
     # Ensure consistency in the 'Entities' column
@@ -1299,7 +1064,7 @@ def main():
     propaganda_count = df['Is_Propaganda'].value_counts().to_dict()
     logging.info(f"Annotation complete. Propaganda: {propaganda_count.get(True, 0)}, Non-Propaganda: {propaganda_count.get(False, 0)}")
 
-    logging.info("Enhanced Propaganda Detection Script completed successfully.")
+    logging.info("Enhanced Propaganda and Media Bias Detection Script completed successfully.")
 
 # ----------------------------
 # Unit Tests
