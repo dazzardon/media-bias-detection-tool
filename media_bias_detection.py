@@ -39,6 +39,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# --- Configuration ---
+ULT_CONFIG = {
+    'propaganda_model_file': 'models/propaganda_detection_model',  # Path to your custom model
+    # Include any other configurations necessary for your model
+}
+
 # --- Initialize Models ---
 @st.cache_resource
 def initialize_models():
@@ -49,12 +55,15 @@ def initialize_models():
             model="nlptown/bert-base-multilingual-uncased-sentiment",
             device=-1  # Use CPU
         )
-        # Initialize Propaganda Detection Model
+        
+        # Initialize Propaganda Detection Model with Custom Model
         propaganda_pipeline_model = pipeline(
             "text-classification",
-            model="IDA-SERICS/PropagandaDetection",
-            device=-1  # Use CPU
+            model=ULT_CONFIG['propaganda_model_file'],
+            tokenizer=ULT_CONFIG['propaganda_model_file'],  # Assuming tokenizer is in the same directory
+            device=-1  # Use CPU; change to 0 if using GPU
         )
+        
         # Initialize SpaCy NLP Model from local path
         from spacy.util import load_model_from_path
 
