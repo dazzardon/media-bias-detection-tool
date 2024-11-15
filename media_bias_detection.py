@@ -4,7 +4,6 @@ import os
 import sys
 import json
 import logging
-import hashlib
 from typing import List, Tuple, Dict
 import pandas as pd
 import swifter
@@ -81,6 +80,7 @@ DEFAULT_CONFIG = {
     'bias_model_file': 'models/media_bias_model',                        # Media bias model path
     'propaganda_model_file': 'models/propaganda_detection_model',         # Propaganda model path
     'label_encoder_file': 'models/label_encoder.pkl',                     # Label encoder path
+    'media_bias_label_encoder_file': 'models/bias_label_encoder.pkl',     # Media bias label encoder path
     'log_file': 'logs/propaganda_detection.log',                          # Log file path
     'bias_report_file': 'reports/media_bias_report.html',                 # Report file for media bias detection
     'propaganda_report_file': 'reports/propaganda_report.html',           # Report file for propaganda detection
@@ -333,63 +333,18 @@ def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFr
 
 def load_transformer_model(model_path: str, label_encoder_path: str):
     """Load the trained transformer model and label encoder."""
-    try:
-        logging.info("Loading transformer model and tokenizer...")
-        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
-        model = DistilBertForSequenceClassification.from_pretrained(model_path)
-        model.eval()  # Set model to evaluation mode
-        logging.info(f"Loaded transformer model from '{model_path}'.")
-
-        logging.info("Loading label encoder...")
-        mlb = joblib.load(label_encoder_path)
-        logging.info(f"Loaded label encoder from '{label_encoder_path}'.")
-
-        return model, tokenizer, mlb
-    except FileNotFoundError as e:
-        logging.error(f"Model or label encoder file not found: {e}")
-        st.error(f"Model or label encoder file not found: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logging.error(f"Error loading model: {e}")
-        st.error(f"Error loading model: {e}")
-        sys.exit(1)
+    return auth.load_transformer_model(model_path, label_encoder_path)
 
 def load_bias_model(model_path: str):
-    """
-    Load the media bias detection model.
+    """Load the media bias detection model."""
+    return auth.load_bias_model(model_path)
 
-    Args:
-        model_path (str): Path to the media bias detection model directory.
-
-    Returns:
-        Tuple[DistilBertForSequenceClassification, DistilBertTokenizer]: The loaded model and tokenizer.
-    """
-    try:
-        logging.info("Loading media bias detection model...")
-        tokenizer = DistilBertTokenizer.from_pretrained(model_path)
-        model = DistilBertForSequenceClassification.from_pretrained(model_path)
-        model.eval()
-        logging.info(f"Loaded media bias detection model from '{model_path}'.")
-        return model, tokenizer
-    except Exception as e:
-        logging.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
-        st.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
-        sys.exit(1)
+def load_media_bias_label_encoder(label_encoder_path: str):
+    """Load or initialize the media bias label encoder."""
+    return auth.load_media_bias_label_encoder(label_encoder_path)
 
 def detect_media_bias(text: str, model, tokenizer, mlb, threshold: float = 0.5) -> str:
-    """
-    Run media bias detection on a given text.
-
-    Args:
-        text (str): The input text to detect bias.
-        model: The pre-trained model for media bias detection.
-        tokenizer: The tokenizer for the bias detection model.
-        mlb: MultiLabelBinarizer for bias categories.
-        threshold (float): Threshold for classification.
-
-    Returns:
-        str: Predicted bias category or score.
-    """
+    """Detect media bias in the given text."""
     try:
         inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
         with torch.no_grad():
@@ -405,13 +360,7 @@ def detect_media_bias(text: str, model, tokenizer, mlb, threshold: float = 0.5) 
         return "Unknown"
 
 def generate_media_bias_report(df: pd.DataFrame, report_file: str):
-    """
-    Generate an HTML report summarizing media bias results.
-
-    Args:
-        df (pd.DataFrame): DataFrame with bias results.
-        report_file (str): Path to the HTML report.
-    """
+    """Generate an HTML report summarizing media bias results."""
     try:
         logging.info("Generating media bias report...")
 
@@ -439,14 +388,7 @@ def generate_media_bias_report(df: pd.DataFrame, report_file: str):
         st.error(f"Error generating media bias report: {type(e).__name__} - {e}")
 
 def generate_evaluation_metrics(df: pd.DataFrame, mlb: MultiLabelBinarizer, metrics_file: str):
-    """
-    Automatically calculate and save classification metrics.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing true and predicted labels.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        metrics_file (str): Path to save the metrics report.
-    """
+    """Calculate and save classification metrics."""
     try:
         logging.info("Calculating automated evaluation metrics...")
         y_true = mlb.transform(df['Techniques'])
@@ -482,15 +424,7 @@ def perform_detailed_misclassification_analysis(
     mlb: MultiLabelBinarizer,
     report_file: str
 ):
-    """
-    Analyze misclassifications to identify common errors, including top misclassified techniques.
-
-    Args:
-        y_true (np.ndarray): True labels.
-        y_pred (np.ndarray): Predicted labels.
-        mlb (MultiLabelBinarizer): Label binarizer.
-        report_file (str): Path to save the misclassification report.
-    """
+    """Analyze misclassifications to identify common errors."""
     try:
         logging.info("Starting detailed misclassification analysis...")
         false_positives = defaultdict(int)
@@ -659,49 +593,44 @@ def train_transformer_model(df: pd.DataFrame, model_save_path: str, label_encode
             f.write(f"\nAverage F1 Score: {f1:.4f}\n")
         logging.info(f"Evaluation metrics saved to '{DEFAULT_CONFIG['metrics_file']}'.")
 
-    except Exception as e:
-        logging.error(f"Error training transformer model: {type(e).__name__} - {e}")
-        st.error(f"Error training transformer model: {type(e).__name__} - {e}")
+    def predict_with_transformer(
+        model: DistilBertForSequenceClassification,
+        tokenizer: DistilBertTokenizer,
+        mlb: MultiLabelBinarizer,
+        texts: List[str],
+        threshold: float = 0.5
+    ) -> List[List[str]]:
+        """
+        Predict propaganda techniques using the trained transformer model.
 
-def predict_with_transformer(
-    model: DistilBertForSequenceClassification,
-    tokenizer: DistilBertTokenizer,
-    mlb: MultiLabelBinarizer,
-    texts: List[str],
-    threshold: float = 0.5
-) -> List[List[str]]:
-    """
-    Predict propaganda techniques using the trained transformer model.
+        Args:
+            model (DistilBertForSequenceClassification): The trained transformer model.
+            tokenizer (DistilBertTokenizer): The tokenizer.
+            mlb (MultiLabelBinarizer): The label binarizer.
+            texts (List[str]): A list of preprocessed texts.
+            threshold (float): Threshold for classification.
 
-    Args:
-        model (DistilBertForSequenceClassification): The trained transformer model.
-        tokenizer (DistilBertTokenizer): The tokenizer.
-        mlb (MultiLabelBinarizer): The label binarizer.
-        texts (List[str]): A list of preprocessed texts.
-        threshold (float): Threshold for classification.
-
-    Returns:
-        List[List[str]]: A list of predicted propaganda techniques for each text.
-    """
-    try:
-        logging.info("Starting prediction with transformer model...")
-        predictions = []
-        model.to('cpu')  # Ensure model is on CPU for prediction
-        for text in tqdm(texts, desc="Predicting"):
-            inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-            with torch.no_grad():
-                outputs = model(**inputs)
-                logits = outputs.logits
-                probs = torch.sigmoid(logits).numpy()[0]
-                labels = (probs > threshold).astype(int)
-                predicted = mlb.inverse_transform([labels])[0]
-                predictions.append(list(predicted))
-        logging.info("Completed predictions with transformer model.")
-        return predictions
-    except Exception as e:
-        logging.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
-        st.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
-        return [[] for _ in texts]
+        Returns:
+            List[List[str]]: A list of predicted propaganda techniques for each text.
+        """
+        try:
+            logging.info("Starting prediction with transformer model...")
+            predictions = []
+            model.to('cpu')  # Ensure model is on CPU for prediction
+            for text in tqdm(texts, desc="Predicting"):
+                inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+                with torch.no_grad():
+                    outputs = model(**inputs)
+                    logits = outputs.logits
+                    probs = torch.sigmoid(logits).numpy()[0]
+                    labels = (probs > threshold).astype(int)
+                    predicted = mlb.inverse_transform([labels])[0]
+                    predictions.append(list(predicted))
+            logging.info("Completed predictions with transformer model.")
+            return predictions
+        except Exception as e:
+            logging.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
+            return [[] for _ in texts]
 
 def perform_semi_supervised_learning(
     df: pd.DataFrame,
@@ -754,7 +683,6 @@ def perform_semi_supervised_learning(
         return augmented_df
     except Exception as e:
         logging.error(f"Error during semi-supervised learning: {type(e).__name__} - {e}")
-        st.error(f"Error during semi-supervised learning: {type(e).__name__} - {e}")
         return df
 
 # ----------------------------
@@ -769,17 +697,14 @@ def main():
         initial_sidebar_state="expanded",
     )
 
-    # Title
+    # App title
     st.title("📊 Propaganda and Media Bias Detection App")
 
-    # Sidebar for Navigation
+    # Sidebar navigation menu
     menu = ["Home", "Login", "SignUp"]
     choice = st.sidebar.selectbox("Menu", menu)
 
-    if 'logged_in' not in st.session_state:
-        st.session_state['logged_in'] = False
-        st.session_state['user_email'] = ''
-
+    # Home page
     if choice == "Home":
         st.subheader("Welcome to the Propaganda Detection App")
         st.markdown("""
@@ -787,6 +712,7 @@ def main():
             Please register or log in to get started.
         """)
 
+    # Login page
     elif choice == "Login":
         if st.session_state['logged_in']:
             st.info(f"Logged in as {st.session_state['user_email']}")
@@ -807,6 +733,7 @@ def main():
                 else:
                     st.error("Invalid email or password.")
 
+    # SignUp page
     elif choice == "SignUp":
         if st.session_state['logged_in']:
             st.info(f"Already logged in as {st.session_state['user_email']}")
@@ -854,14 +781,14 @@ def main():
         analyze_button = st.sidebar.button("🔍 Analyze Articles")
 
         # Text Area for Custom Text Analysis
-        st.header("📝 Analyze Custom Text")
+        st.subheader("📝 Analyze Custom Text")
         user_input = st.text_area("Enter text to analyze for propaganda and bias:")
 
         analyze_text_button = st.button("🔍 Analyze Text")
 
         # Handle Uploaded Data Analysis
         if analyze_button:
-            if uploaded_file is not None and techniques_file is not None:
+            if uploaded_file and techniques_file:
                 try:
                     # Load Articles Data
                     data = json.load(uploaded_file)
@@ -913,7 +840,7 @@ def main():
 
                     # Load Trained Model and Label Encoder
                     with st.spinner("📦 Loading trained transformer model and label encoder..."):
-                        propaganda_model, propaganda_tokenizer, propaganda_mlb = auth.load_transformer_model(
+                        propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(
                             DEFAULT_CONFIG['propaganda_model_file'],
                             DEFAULT_CONFIG['label_encoder_file']
                         )
@@ -941,21 +868,8 @@ def main():
                     st.success("✅ Loaded media bias detection model.")
 
                     # Load or Define MultiLabelBinarizer for Media Bias Categories
-                    bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
-                    if os.path.exists(bias_mlb_file):
-                        bias_mlb = joblib.load(bias_mlb_file)
-                        logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
-                    else:
-                        # Define default bias categories
-                        bias_categories = ["Left", "Center", "Right", "Unknown"]
-                        bias_mlb = MultiLabelBinarizer(classes=bias_categories)
-                        bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
-                        # Save default bias label encoder
-                        bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
-                        if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
-                            os.makedirs(bias_label_encoder_dir)
-                        joblib.dump(bias_mlb, bias_mlb_file)
-                        logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
+                    bias_mlb_file = DEFAULT_CONFIG['media_bias_label_encoder_file']
+                    bias_mlb = load_media_bias_label_encoder(bias_mlb_file)
 
                     # Predict Media Bias
                     with st.spinner("🔍 Detecting media bias in articles..."):
@@ -1068,7 +982,7 @@ def main():
 
                     # Load Trained Model and Label Encoder
                     with st.spinner("📦 Loading transformer model and label encoder..."):
-                        propaganda_model, propaganda_tokenizer, propaganda_mlb = auth.load_transformer_model(
+                        propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(
                             DEFAULT_CONFIG['propaganda_model_file'],
                             DEFAULT_CONFIG['label_encoder_file']
                         )
@@ -1095,21 +1009,8 @@ def main():
                     st.success("✅ Loaded media bias detection model.")
 
                     # Load or Define MultiLabelBinarizer for Media Bias Categories
-                    bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
-                    if os.path.exists(bias_mlb_file):
-                        bias_mlb = joblib.load(bias_mlb_file)
-                        logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
-                    else:
-                        # Define default bias categories
-                        bias_categories = ["Left", "Center", "Right", "Unknown"]
-                        bias_mlb = MultiLabelBinarizer(classes=bias_categories)
-                        bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
-                        # Save default bias label encoder
-                        bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
-                        if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
-                            os.makedirs(bias_label_encoder_dir)
-                        joblib.dump(bias_mlb, bias_mlb_file)
-                        logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
+                    bias_mlb_file = DEFAULT_CONFIG['media_bias_label_encoder_file']
+                    bias_mlb = load_media_bias_label_encoder(bias_mlb_file)
 
                     # Predict Media Bias
                     with st.spinner("🔍 Predicting media bias..."):
