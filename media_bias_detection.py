@@ -1,54 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-Enhanced Propaganda and Media Bias Detection Script
-==================================================
-
-This script detects propaganda and media bias in articles by analyzing their content using machine learning models,
-topic modeling, and Named Entity Recognition (NER). It leverages specific propaganda techniques and media bias
-categories provided by the user through JSON files and utilizes JSON data for model training.
-
-Features:
-- Integration of specific propaganda techniques with associated keywords provided by the user
-- Integration of media bias detection using a pre-trained model
-- Processing of articles and annotations from JSON files
-- Optimized text processing with spaCy
-- Parallel processing with swifter with fallback to standard apply
-- Advanced logging with configurable verbosity
-- Comprehensive error handling and input validation
-- Unit tests for critical functions with enhanced coverage
-- Enhanced output with summary statistics
-- Efficient data saving with Parquet
-- Machine learning classification using a transformer-based model
-- Advanced topic modeling with BERTopic with robust topic assignment
-- Multi-label classification
-- Named Entity Recognition (NER) with detailed error logging and filtering
-- Detection of specific propaganda techniques based on JSON-labeled data with keyword tracking
-- Media bias detection with detailed reporting
-- Interactive report generation with enhanced error handling and detailed insights
-- Improved misclassification analysis
-- Automated evaluation metrics
-- Semi-supervised learning with adjustable thresholds
-
-Dependencies:
-- pandas
-- swifter
-- nltk
-- spacy
-- tqdm
-- scikit-learn
-- gensim
-- matplotlib
-- seaborn
-- networkx
-- transformers
-- bertopic
-- joblib
-- torch
-
-Ensure all dependencies are installed before running the script.
-"""
+# app.py
 
 import os
 import sys
@@ -91,6 +41,7 @@ import joblib
 import torch
 import unittest
 from collections import defaultdict
+import streamlit as st
 
 # ----------------------------
 # Initialization
@@ -108,7 +59,7 @@ for pkg in nltk_packages:
 try:
     nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 except OSError:
-    print("Downloading spaCy 'en_core_web_sm' model...")
+    st.write("Downloading spaCy 'en_core_web_sm' model...")
     from spacy.cli import download
     download("en_core_web_sm")
     nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
@@ -120,13 +71,10 @@ lemmatizer = WordNetLemmatizer()
 try:
     ner_model = spacy.load("en_core_web_sm")
 except OSError:
-    print("Downloading spaCy 'en_core_web_sm' model for NER...")
+    st.write("Downloading spaCy 'en_core_web_sm' model for NER...")
     from spacy.cli import download
     download("en_core_web_sm")
     ner_model = spacy.load("en_core_web_sm")
-
-# Initialize BERTopic model
-topic_model = BERTopic()
 
 # Relevant Entity Labels for NER Enhancement
 RELEVANT_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC"}
@@ -146,7 +94,8 @@ DEFAULT_CONFIG = {
     'propaganda_report_file': 'reports/propaganda_report.html',  # Report file for propaganda detection
     'metrics_file': 'reports/evaluation_metrics.txt',            # Metrics file for evaluation results
     'threshold': 1.0,                                           # Threshold for labeling as 'Propaganda'
-    'log_level': 'INFO'  # Default logging level
+    'log_level': 'INFO',  # Default logging level
+    'num_topics': 5,       # Number of topics for BERTopic
 }
 
 # ----------------------------
@@ -210,17 +159,21 @@ def load_propaganda_techniques(file_path: str) -> Dict[str, List[str]]:
             techniques_dict = {tech.lower(): [kw.lower() for kw in kws] for tech, kws in techniques.items()}
         else:
             logging.error(f"Propaganda techniques file '{file_path}' has an unsupported format.")
+            st.error(f"Propaganda techniques file '{file_path}' has an unsupported format.")
             sys.exit(1)
         logging.info(f"Loaded {len(techniques_dict)} propaganda techniques from '{file_path}'.")
         return techniques_dict
     except FileNotFoundError:
         logging.error(f"Propaganda techniques file '{file_path}' not found.")
+        st.error(f"Propaganda techniques file '{file_path}' not found.")
         sys.exit(1)
     except json.JSONDecodeError:
         logging.error(f"Propaganda techniques file '{file_path}' is not a valid JSON.")
+        st.error(f"Propaganda techniques file '{file_path}' is not a valid JSON.")
         sys.exit(1)
     except Exception as e:
         logging.error(f"Error loading propaganda techniques: {type(e).__name__} - {e}")
+        st.error(f"Error loading propaganda techniques: {type(e).__name__} - {e}")
         sys.exit(1)
 
 def preprocess_text(text: str) -> str:
@@ -288,6 +241,7 @@ def perform_topic_modeling(texts: List[str], num_topics: int) -> Tuple[pd.DataFr
         topics = list(topics)  # Ensure topics is a list
         if len(topics) != len(texts):
             logging.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(texts)}). Adjusting list length.")
+            st.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(texts)}). Adjusting list length.")
             if len(topics) > len(texts):
                 topics = topics[:len(texts)]
                 logging.warning(f"Trimmed topics list to match the number of documents ({len(texts)}).")
@@ -299,6 +253,7 @@ def perform_topic_modeling(texts: List[str], num_topics: int) -> Tuple[pd.DataFr
         return topic_info, topic_freq, topic_model
     except Exception as e:
         logging.error(f"Error in topic modeling: {type(e).__name__} - {e}")
+        st.error(f"Error in topic modeling: {type(e).__name__} - {e}")
         # Return empty DataFrames and None for topic_model_instance
         return pd.DataFrame(), pd.DataFrame(), None
 
@@ -360,7 +315,8 @@ def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFr
         plt.figure(figsize=(6,4))
         sns.countplot(data=df, x='Is_Propaganda')
         plt.title('Propaganda Distribution')
-        plt.savefig('reports/propaganda_distribution.png')
+        plot_path = 'reports/propaganda_distribution.png'
+        plt.savefig(plot_path)
         plt.close()
         logging.info("Saved propaganda distribution plot.")
 
@@ -384,7 +340,7 @@ def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFr
                 <h2>Summary</h2>
                 <p><strong>Propaganda Articles:</strong> {propaganda_count.get(True, 0)}</p>
                 <p><strong>Non-Propaganda Articles:</strong> {propaganda_count.get(False, 0)}</p>
-                <img src="propaganda_distribution.png" alt="Propaganda Distribution">
+                <img src="{plot_path}" alt="Propaganda Distribution">
                 <h2>Topic Modeling</h2>
                 <p>{topics_html}</p>
                 <h2>Propaganda Techniques Detected</h2>
@@ -397,6 +353,7 @@ def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFr
         logging.info(f"Enhanced interactive report generated at '{report_file}'.")
     except Exception as e:
         logging.error(f"Error generating enhanced interactive report: {type(e).__name__} - {e}")
+        st.error(f"Error generating enhanced interactive report: {type(e).__name__} - {e}")
 
 def load_transformer_model(model_path: str, label_encoder_path: str):
     """Load the trained transformer model and label encoder."""
@@ -414,9 +371,11 @@ def load_transformer_model(model_path: str, label_encoder_path: str):
         return model, tokenizer, mlb
     except FileNotFoundError as e:
         logging.error(f"Model or label encoder file not found: {e}")
+        st.error(f"Model or label encoder file not found: {e}")
         sys.exit(1)
     except Exception as e:
         logging.error(f"Error loading model: {e}")
+        st.error(f"Error loading model: {e}")
         sys.exit(1)
 
 def load_bias_model(model_path: str):
@@ -438,6 +397,7 @@ def load_bias_model(model_path: str):
         return model, tokenizer
     except Exception as e:
         logging.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
+        st.error(f"Error loading media bias detection model: {type(e).__name__} - {e}")
         sys.exit(1)
 
 def detect_media_bias(text: str, model, tokenizer, mlb, threshold: float = 0.5) -> str:
@@ -500,6 +460,7 @@ def generate_media_bias_report(df: pd.DataFrame, report_file: str):
         logging.info(f"Media bias report generated at '{report_file}'.")
     except Exception as e:
         logging.error(f"Error generating media bias report: {type(e).__name__} - {e}")
+        st.error(f"Error generating media bias report: {type(e).__name__} - {e}")
 
 def generate_evaluation_metrics(df: pd.DataFrame, mlb: MultiLabelBinarizer, metrics_file: str):
     """
@@ -537,6 +498,7 @@ def generate_evaluation_metrics(df: pd.DataFrame, mlb: MultiLabelBinarizer, metr
         logging.info(f"Automated evaluation metrics saved to '{metrics_file}'.")
     except Exception as e:
         logging.error(f"Error calculating evaluation metrics: {type(e).__name__} - {e}")
+        st.error(f"Error calculating evaluation metrics: {type(e).__name__} - {e}")
 
 def perform_detailed_misclassification_analysis(
     y_true,
@@ -587,6 +549,7 @@ def perform_detailed_misclassification_analysis(
         logging.info(f"Detailed misclassification analysis saved to '{report_file}'.")
     except Exception as e:
         logging.error(f"Error during detailed misclassification analysis: {type(e).__name__} - {e}")
+        st.error(f"Error during detailed misclassification analysis: {type(e).__name__} - {e}")
 
 # ----------------------------
 # Machine Learning Functions
@@ -717,6 +680,7 @@ def train_transformer_model(df: pd.DataFrame, model_save_path: str, label_encode
 
     except Exception as e:
         logging.error(f"Error training transformer model: {type(e).__name__} - {e}")
+        st.error(f"Error training transformer model: {type(e).__name__} - {e}")
 
 def compute_metrics(eval_pred, mlb):
     """
@@ -772,6 +736,7 @@ def predict_with_transformer(
         return predictions
     except Exception as e:
         logging.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
+        st.error(f"Error in transformer prediction: {type(e).__name__} - {e}")
         return [[] for _ in texts]
 
 def perform_semi_supervised_learning(
@@ -825,340 +790,319 @@ def perform_semi_supervised_learning(
         return augmented_df
     except Exception as e:
         logging.error(f"Error during semi-supervised learning: {type(e).__name__} - {e}")
+        st.error(f"Error during semi-supervised learning: {type(e).__name__} - {e}")
         return df
 
 # ----------------------------
-# Argument Parsing
-# ----------------------------
-
-def parse_arguments() -> argparse.Namespace:
-    """
-    Parse command-line arguments.
-
-    Returns:
-        argparse.Namespace: The parsed arguments.
-    """
-    parser = argparse.ArgumentParser(description="Enhanced Propaganda and Media Bias Detection in Articles.")
-    parser.add_argument('--input', type=str, default=DEFAULT_CONFIG['data_file'], help='Path to input JSON file.')
-    parser.add_argument('--output', type=str, default='annotated_articles.parquet', help='Path to output Parquet file.')
-    parser.add_argument('--techniques', type=str, default=DEFAULT_CONFIG['propaganda_techniques_file'], help='Path to propaganda techniques JSON file.')
-    parser.add_argument('--bias_model', type=str, default=DEFAULT_CONFIG['bias_model_file'], help='Path to media bias model directory.')
-    parser.add_argument('--bias_report', type=str, default=DEFAULT_CONFIG['bias_report_file'], help='Path to save media bias report.')
-    parser.add_argument('--bias_model_label_encoder', type=str, default='models/bias_label_encoder.pkl', help='Path to media bias label encoder file.')
-    parser.add_argument('--propaganda_model', type=str, default=DEFAULT_CONFIG['propaganda_model_file'], help='Path to propaganda model directory.')
-    parser.add_argument('--label_encoder', type=str, default=DEFAULT_CONFIG['label_encoder_file'], help='Path to label encoder file.')
-    parser.add_argument('--log', type=str, default=DEFAULT_CONFIG['log_file'], help='Path to log file.')
-    parser.add_argument('--report', type=str, default=DEFAULT_CONFIG['propaganda_report_file'], help='Path to interactive report HTML file.')
-    parser.add_argument('--metrics_file', type=str, default=DEFAULT_CONFIG['metrics_file'], help='Path to save evaluation metrics.')
-    parser.add_argument('--misclassification_report', type=str, default='reports/misclassification_report.txt', help='Path to misclassification report file.')
-    parser.add_argument('--log_level', type=str, default=DEFAULT_CONFIG['log_level'], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help='Logging verbosity level.')
-    parser.add_argument('--threshold', type=float, default=DEFAULT_CONFIG['threshold'], help='Threshold for labeling as Propaganda.')
-    parser.add_argument('--num_topics', type=int, default=DEFAULT_CONFIG['num_topics'], help='Number of topics for BERTopic.')
-    return parser.parse_args()
-
-# ----------------------------
-# Main Function
+# Streamlit UI Components
 # ----------------------------
 
 def main():
-    # Parse command-line arguments
-    args = parse_arguments()
-
-    # Update DEFAULT_CONFIG dynamically with parsed arguments
-    DEFAULT_CONFIG.update(vars(args))
-
-    # Setup logging with configurable verbosity
-    setup_logging(args.log, args.log_level)
-    logging.info("Starting Enhanced Propaganda and Media Bias Detection Script")
-
-    # Validate input file
-    if not args.input.lower().endswith('.json'):
-        logging.error("Input file must be a JSON.")
-        sys.exit(1)
-
-    # Load propaganda techniques
-    techniques = load_propaganda_techniques(args.techniques)
-
-    # Load data
-    try:
-        logging.info(f"Loading data from '{args.input}'...")
-        with open(args.input, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        df = pd.json_normalize(data)
-        logging.info(f"Loaded data with {len(df)} records.")
-    except Exception as e:
-        logging.error(f"Error loading data: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-    # Ensure 'content' column exists
-    if 'content' not in df.columns and 'Title' in df.columns:
-        df.rename(columns={'Title': 'content'}, inplace=True)
-        logging.info("Renamed 'Title' column to 'content'.")
-    elif 'content' not in df.columns:
-        logging.error("The 'content' column is missing from the dataset.")
-        sys.exit(1)
-
-    # Preprocess text with parallel processing and fallback to standard apply
-    logging.info("Preprocessing text data...")
-    try:
-        df['processed_content'] = df['content'].astype(str).swifter.apply(preprocess_text)
-        logging.info("Completed text preprocessing with swifter optimization.")
-    except Exception as e:
-        logging.warning(f"Swifter optimization failed: {type(e).__name__} - {e}. Reverting to standard .apply().")
-        try:
-            df['processed_content'] = df['content'].astype(str).apply(preprocess_text)
-            logging.info("Completed text preprocessing with standard apply.")
-        except Exception as ex:
-            logging.error(f"Error during text preprocessing with standard apply: {type(ex).__name__} - {ex}")
-            sys.exit(1)
-
-    # Detect propaganda techniques with keywords
-    logging.info("Detecting propaganda techniques in articles...")
-    try:
-        df['Detected_Techniques'] = df['content'].astype(str).swifter.apply(
-            lambda x: detect_propaganda_techniques_in_text(x, techniques)
-        )
-        logging.info("Completed propaganda techniques detection with swifter optimization.")
-    except Exception as e:
-        logging.error(f"Error during propaganda techniques detection: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-    # Named Entity Recognition with individual error handling and filtering
-    logging.info("Performing Named Entity Recognition (NER)...")
-    try:
-        df['Entities'] = df['content'].astype(str).swifter.apply(perform_filtered_ner)
-        logging.info("Completed Named Entity Recognition with swifter optimization.")
-    except Exception as e:
-        logging.error(f"Error during Named Entity Recognition: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-    # Prepare labels for machine learning
-    df['Is_Propaganda'] = df['Detected_Techniques'].apply(lambda x: True if x else False)
-    df['Techniques'] = df['Detected_Techniques']
-
-    # Machine Learning Classification using Transformer Model
-    logging.info("Starting transformer-based machine learning classification...")
-    train_transformer_model(df, args.propaganda_model, args.label_encoder)
-
-    # Load trained propaganda model and label encoder
-    logging.info("Loading trained propaganda transformer model and label encoder...")
-    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(args.propaganda_model, args.label_encoder)
-
-    # Predict propaganda techniques for each article
-    logging.info("Detecting propaganda techniques in articles...")
-    try:
-        df['Predicted_Techniques'] = predict_with_transformer(propaganda_model, propaganda_tokenizer, propaganda_mlb, df['processed_content'].tolist(), threshold=0.5)
-        logging.info("Completed propaganda techniques detection.")
-    except Exception as e:
-        logging.error(f"Error during propaganda techniques detection: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-    # Topic Modeling with BERTopic
-    logging.info("Starting topic modeling with BERTopic...")
-    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
-
-    # Handle cases where topic modeling failed
-    if topic_info.empty and topic_freq.empty:
-        logging.warning("BERTopic modeling did not produce any topics. Check input data or model configuration.")
-
-    if not topic_info.empty and topic_model_instance is not None:
-        # Ensure that the number of topics matches the number of documents
-        try:
-            topics, _ = topic_model_instance.transform(df['processed_content'].tolist())
-            if len(topics) != len(df):
-                logging.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(df)}). Adjusting list length.")
-                if len(topics) > len(df):
-                    topics = topics[:len(df)]
-                    logging.warning(f"Trimmed topics list to match the number of documents ({len(df)}).")
-                else:
-                    topics = list(topics) + [None] * (len(df) - len(topics))
-                    logging.warning(f"Padded topics list with 'None' to match the number of documents ({len(df)}).")
-            df['Topics'] = topics
-            logging.info("Assigned topics to all documents.")
-        except Exception as e:
-            logging.error(f"Error during topic assignment: {type(e).__name__} - {e}")
-            df['Topics'] = None
-    else:
-        df['Topics'] = None
-        logging.warning("Topic modeling did not complete successfully. 'Topics' column set to None.")
-
-    logging.info("Completed topic modeling.")
-
-    # Media Bias Detection
-    logging.info("Starting media bias detection...")
-    # Load media bias detection model
-    bias_model, bias_tokenizer = load_bias_model(args.bias_model)
-
-    # Load or define MultiLabelBinarizer for media bias categories
-    # This assumes you have a label encoder for media bias similar to propaganda techniques
-    # If media bias is single-label classification, adjust accordingly
-    bias_mlb_file = args.bias_model_label_encoder
-    if os.path.exists(bias_mlb_file):
-        bias_mlb = joblib.load(bias_mlb_file)
-        logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
-    else:
-        # If not present, define a default label encoder or handle as needed
-        logging.warning(f"Media bias label encoder file '{bias_mlb_file}' not found. Using default encoder.")
-        bias_categories = ["Left", "Center", "Right", "Unknown"]
-        bias_mlb = MultiLabelBinarizer(classes=bias_categories)
-        bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
-        # Ensure reports directory exists
-        reports_dir = os.path.dirname(args.bias_report)
-        if reports_dir and not os.path.exists(reports_dir):
-            os.makedirs(reports_dir)
-        joblib.dump(bias_mlb, bias_mlb_file)
-        logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
-
-    # Predict bias for each article
-    logging.info("Detecting media bias in articles...")
-    try:
-        df['Bias_Category'] = df['processed_content'].apply(lambda x: detect_media_bias(x, bias_model, bias_tokenizer, bias_mlb, threshold=0.5))
-        logging.info("Completed media bias detection.")
-    except Exception as e:
-        logging.error(f"Error during media bias detection: {type(e).__name__} - {e}")
-        df['Bias_Category'] = "Unknown"
-
-    # Generate Media Bias Report
-    generate_media_bias_report(df, args.bias_report)
-
-    # Topic Modeling with BERTopic
-    logging.info("Starting topic modeling with BERTopic...")
-    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
-
-    # Handle cases where topic modeling failed
-    if topic_info.empty and topic_freq.empty:
-        logging.warning("BERTopic modeling did not produce any topics. Check input data or model configuration.")
-
-    if not topic_info.empty and topic_model_instance is not None:
-        # Ensure that the number of topics matches the number of documents
-        try:
-            topics, _ = topic_model_instance.transform(df['processed_content'].tolist())
-            if len(topics) != len(df):
-                logging.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(df)}). Adjusting list length.")
-                if len(topics) > len(df):
-                    topics = topics[:len(df)]
-                    logging.warning(f"Trimmed topics list to match the number of documents ({len(df)}).")
-                else:
-                    topics = list(topics) + [None] * (len(df) - len(topics))
-                    logging.warning(f"Padded topics list with 'None' to match the number of documents ({len(df)}).")
-            df['Topics'] = topics
-            logging.info("Assigned topics to all documents.")
-        except Exception as e:
-            logging.error(f"Error during topic assignment: {type(e).__name__} - {e}")
-            df['Topics'] = None
-    else:
-        df['Topics'] = None
-        logging.warning("Topic modeling did not complete successfully. 'Topics' column set to None.")
-
-    logging.info("Completed topic modeling.")
-
-    # Perform Semi-Supervised Learning
-    logging.info("Performing semi-supervised learning to augment training data...")
-    df = perform_semi_supervised_learning(df, propaganda_model, propaganda_tokenizer, propaganda_mlb, threshold=0.9)
-
-    # Retrain the propaganda model with augmented data
-    logging.info("Retraining transformer model with augmented data...")
-    train_transformer_model(df, args.propaganda_model, args.label_encoder)
-
-    # Reload the updated propaganda model and label encoder
-    logging.info("Reloading updated transformer model and label encoder...")
-    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(args.propaganda_model, args.label_encoder)
-
-    # Re-predict propaganda techniques with the updated model
-    logging.info("Re-predicting propaganda techniques with updated transformer model...")
-    try:
-        df['Predicted_Techniques'] = predict_with_transformer(propaganda_model, propaganda_tokenizer, propaganda_mlb, df['processed_content'].tolist(), threshold=0.5)
-        logging.info("Completed re-predictions with updated transformer model.")
-    except Exception as e:
-        logging.error(f"Error during re-predictions: {type(e).__name__} - {e}")
-        sys.exit(1)
-
-    # Re-running topic modeling with updated model
-    logging.info("Re-running topic modeling with updated model...")
-    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), args.num_topics)
-
-    # Assign topics again
-    if not topic_info.empty and topic_model_instance is not None:
-        try:
-            topics, _ = topic_model_instance.transform(df['processed_content'].tolist())
-            if len(topics) != len(df):
-                logging.error(f"Mismatch in number of topics ({len(topics)}) and number of documents ({len(df)}). Adjusting list length.")
-                if len(topics) > len(df):
-                    topics = topics[:len(df)]
-                    logging.warning(f"Trimmed topics list to match the number of documents ({len(df)}).")
-                else:
-                    topics = list(topics) + [None] * (len(df) - len(topics))
-                    logging.warning(f"Padded topics list with 'None' to match the number of documents ({len(df)}).")
-            df['Topics'] = topics
-            logging.info("Re-assigned topics to all documents.")
-        except Exception as e:
-            logging.error(f"Error during topic assignment: {type(e).__name__} - {e}")
-            df['Topics'] = None
-    else:
-        df['Topics'] = None
-        logging.warning("Topic modeling did not complete successfully after retraining. 'Topics' column set to None.")
-
-    logging.info("Completed topic modeling after retraining.")
-
-    # Generate Enhanced Interactive Report
-    try:
-        generate_enhanced_interactive_report(df, topic_info, args.report)
-    except Exception as e:
-        logging.error(f"Error generating enhanced report: {type(e).__name__} - {e}")
-
-    # Calculate and save evaluation metrics
-    generate_evaluation_metrics(df, propaganda_mlb, args.metrics_file)
-
-    # Perform detailed misclassification analysis
-    perform_detailed_misclassification_analysis(
-        y_true=propaganda_mlb.transform(df['Techniques']),
-        y_pred=propaganda_mlb.transform(df['Predicted_Techniques']),
-        mlb=propaganda_mlb,
-        report_file=args.misclassification_report
+    # Set Streamlit page configuration
+    st.set_page_config(
+        page_title="Propaganda and Media Bias Detection",
+        layout="wide",
+        initial_sidebar_state="expanded",
     )
 
-    # Ensure consistency in the 'Entities' column
-    logging.info("Ensuring consistency in the 'Entities' column before saving...")
-    try:
-        # Convert 'Entities' to lists if not already, else assign empty list
-        df['Entities'] = df['Entities'].apply(lambda x: x if isinstance(x, list) else [])
-        # Convert lists in the 'Entities' column to strings for Parquet compatibility
-        df['Entities'] = df['Entities'].apply(lambda x: ', '.join([f"{ent['text']} ({ent['label']})" for ent in x]) if isinstance(x, list) else '')
-        logging.info("Converted 'Entities' column to consistent string format.")
-    except Exception as e:
-        logging.error(f"Error processing 'Entities' column: {type(e).__name__} - {e}")
-        df['Entities'] = ''
+    # Initialize Logging
+    setup_logging(DEFAULT_CONFIG['log_file'], DEFAULT_CONFIG['log_level'])
 
-    # Ensure consistency in the 'Indicators' column
-    logging.info("Ensuring consistency in the 'Indicators' column before saving...")
-    try:
-        # Convert non-list entries to empty lists
-        df['Indicators'] = df.get('Indicators', pd.Series([[]]*len(df)))  # Ensure 'Indicators' exists
-        df['Indicators'] = df['Indicators'].apply(lambda x: x if isinstance(x, list) else [])
-        # Convert lists to comma-separated strings
-        df['Indicators'] = df['Indicators'].apply(lambda x: ', '.join(str(item) for item in x) if isinstance(x, list) else '')
-        logging.info("Converted 'Indicators' column to consistent string format.")
-    except Exception as e:
-        logging.error(f"Error processing 'Indicators' column: {type(e).__name__} - {e}")
-        df['Indicators'] = ''
+    st.title("📊 Propaganda and Media Bias Detection in Articles")
 
-    # Save Annotated Data
-    logging.info("Saving annotated data to Parquet file...")
-    try:
-        output_dir = os.path.dirname(args.output)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        df.to_parquet(args.output, index=False)
-        logging.info(f"Annotated data saved to '{args.output}'.")
-    except Exception as e:
-        logging.error(f"Error saving annotated data: {type(e).__name__} - {e}")
-        sys.exit(1)
+    # Sidebar for Configuration
+    st.sidebar.title("🔧 Configuration")
 
-    # Summary Statistics
-    propaganda_count = df['Is_Propaganda'].value_counts().to_dict()
-    logging.info(f"Annotation complete. Propaganda: {propaganda_count.get(True, 0)}, Non-Propaganda: {propaganda_count.get(False, 0)}")
+    # File Uploader for JSON Data
+    st.sidebar.subheader("Upload Data")
+    uploaded_file = st.sidebar.file_uploader("Choose a JSON file containing articles", type="json")
 
-    logging.info("Enhanced Propaganda and Media Bias Detection Script completed successfully.")
+    # File Uploader for Propaganda Techniques JSON
+    techniques_file = st.sidebar.file_uploader("Choose a JSON file for Propaganda Techniques", type="json", key='techniques')
+
+    # Slider for Threshold
+    threshold = st.sidebar.slider("Threshold for Propaganda Detection", 0.0, 1.0, DEFAULT_CONFIG['threshold'], 0.05)
+
+    # Number input for Number of Topics
+    num_topics = st.sidebar.number_input("Number of Topics for BERTopic", min_value=1, max_value=20, value=DEFAULT_CONFIG['num_topics'])
+
+    # Predict Button
+    analyze_button = st.sidebar.button("Analyze Articles")
+
+    # Text Area for Custom Text Analysis
+    st.header("📝 Analyze Custom Text")
+    user_input = st.text_area("Enter text to analyze for propaganda and bias:")
+
+    analyze_text_button = st.button("Analyze Text")
+
+    # Initialize empty DataFrame for results
+    results_df = pd.DataFrame()
+
+    # Handle Uploaded Data
+    if analyze_button:
+        if uploaded_file is not None and techniques_file is not None:
+            try:
+                # Load data
+                data = json.load(uploaded_file)
+                df = pd.json_normalize(data)
+                st.success(f"Loaded data with {len(df)} records.")
+
+                # Ensure 'content' column exists
+                if 'content' not in df.columns and 'Title' in df.columns:
+                    df.rename(columns={'Title': 'content'}, inplace=True)
+                    st.info("Renamed 'Title' column to 'content'.")
+                elif 'content' not in df.columns:
+                    st.error("The 'content' column is missing from the dataset.")
+                    st.stop()
+
+                # Load propaganda techniques
+                techniques = load_propaganda_techniques(DEFAULT_CONFIG['propaganda_techniques_file'])
+
+                # Preprocess text
+                with st.spinner("Preprocessing text data..."):
+                    df['processed_content'] = df['content'].astype(str).swifter.apply(preprocess_text)
+                st.success("Completed text preprocessing.")
+
+                # Detect propaganda techniques
+                with st.spinner("Detecting propaganda techniques in articles..."):
+                    df['Detected_Techniques'] = df['content'].astype(str).swifter.apply(
+                        lambda x: detect_propaganda_techniques_in_text(x, techniques)
+                    )
+                st.success("Completed propaganda techniques detection.")
+
+                # Perform NER
+                with st.spinner("Performing Named Entity Recognition (NER)..."):
+                    df['Entities'] = df['content'].astype(str).swifter.apply(perform_filtered_ner)
+                st.success("Completed Named Entity Recognition.")
+
+                # Prepare labels
+                df['Is_Propaganda'] = df['Detected_Techniques'].apply(lambda x: True if x else False)
+                df['Techniques'] = df['Detected_Techniques']
+
+                # Train Transformer Model
+                with st.spinner("Training transformer model... This may take a while."):
+                    train_transformer_model(df, DEFAULT_CONFIG['propaganda_model_file'], DEFAULT_CONFIG['label_encoder_file'])
+                st.success("Transformer model trained successfully.")
+
+                # Load trained model and label encoder
+                with st.spinner("Loading trained transformer model and label encoder..."):
+                    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(
+                        DEFAULT_CONFIG['propaganda_model_file'],
+                        DEFAULT_CONFIG['label_encoder_file']
+                    )
+                st.success("Loaded transformer model and label encoder.")
+
+                # Predict Propaganda Techniques
+                with st.spinner("Detecting propaganda techniques in articles..."):
+                    df['Predicted_Techniques'] = predict_with_transformer(
+                        propaganda_model,
+                        propaganda_tokenizer,
+                        propaganda_mlb,
+                        df['processed_content'].tolist(),
+                        threshold=0.5
+                    )
+                st.success("Completed propaganda techniques detection.")
+
+                # Topic Modeling
+                with st.spinner("Performing topic modeling with BERTopic..."):
+                    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), num_topics)
+                st.success("Completed topic modeling.")
+
+                # Media Bias Detection
+                with st.spinner("Loading media bias detection model..."):
+                    bias_model, bias_tokenizer = load_bias_model(DEFAULT_CONFIG['bias_model_file'])
+                st.success("Loaded media bias detection model.")
+
+                # Load or define MultiLabelBinarizer for media bias categories
+                bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
+                if os.path.exists(bias_mlb_file):
+                    bias_mlb = joblib.load(bias_mlb_file)
+                    logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
+                else:
+                    # Define default bias categories
+                    bias_categories = ["Left", "Center", "Right", "Unknown"]
+                    bias_mlb = MultiLabelBinarizer(classes=bias_categories)
+                    bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
+                    # Save default bias label encoder
+                    bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
+                    if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
+                        os.makedirs(bias_label_encoder_dir)
+                    joblib.dump(bias_mlb, bias_mlb_file)
+                    logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
+
+                # Predict Media Bias
+                with st.spinner("Detecting media bias in articles..."):
+                    df['Bias_Category'] = df['processed_content'].apply(
+                        lambda x: detect_media_bias(x, bias_model, bias_tokenizer, bias_mlb, threshold=0.5)
+                    )
+                st.success("Completed media bias detection.")
+
+                # Generate Reports
+                with st.spinner("Generating reports..."):
+                    generate_enhanced_interactive_report(df, topic_info, DEFAULT_CONFIG['propaganda_report_file'])
+                    generate_media_bias_report(df, DEFAULT_CONFIG['bias_report_file'])
+                st.success("Reports generated successfully.")
+
+                # Generate Evaluation Metrics
+                with st.spinner("Calculating evaluation metrics..."):
+                    generate_evaluation_metrics(df, propaganda_mlb, DEFAULT_CONFIG['metrics_file'])
+                st.success("Evaluation metrics calculated.")
+
+                # Perform Misclassification Analysis
+                with st.spinner("Performing misclassification analysis..."):
+                    perform_detailed_misclassification_analysis(
+                        y_true=propaganda_mlb.transform(df['Techniques']),
+                        y_pred=propaganda_mlb.transform(df['Predicted_Techniques']),
+                        mlb=propaganda_mlb,
+                        report_file=DEFAULT_CONFIG['misclassification_report_file']
+                    )
+                st.success("Misclassification analysis completed.")
+
+                # Display Results
+                st.subheader("📊 Annotated Data")
+                st.dataframe(df.head())
+
+                st.subheader("📈 Propaganda Distribution")
+                fig, ax = plt.subplots()
+                sns.countplot(data=df, x='Is_Propaganda', ax=ax)
+                plt.title('Propaganda Distribution')
+                st.pyplot(fig)
+
+                st.subheader("📚 Topic Modeling")
+                if not topic_info.empty:
+                    st.write(topic_info)
+                else:
+                    st.write("No topics were identified.")
+
+                st.subheader("🗂 Propaganda Techniques Detected")
+                st.write(df[['article_id', 'Predicted_Techniques']].head())
+
+                st.subheader("🧠 Media Bias Detection")
+                st.write(df[['article_id', 'Bias_Category']].head())
+
+                # Provide Download Button
+                csv_data = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="💾 Download Annotated Data as CSV",
+                    data=csv_data,
+                    file_name='annotated_data.csv',
+                    mime='text/csv',
+                )
+
+                # Display Evaluation Metrics
+                st.subheader("📋 Evaluation Metrics")
+                with open(DEFAULT_CONFIG['metrics_file'], 'r') as f:
+                    metrics_content = f.read()
+                st.text(metrics_content)
+
+                # Display Misclassification Report
+                st.subheader("🔍 Misclassification Analysis")
+                with open(DEFAULT_CONFIG['misclassification_report_file'], 'r') as f:
+                    misclass_content = f.read()
+                st.text(misclass_content)
+
+            except Exception as e:
+                logging.error(f"An error occurred during analysis: {type(e).__name__} - {e}")
+                st.error(f"An error occurred during analysis: {type(e).__name__} - {e}")
+        else:
+            st.warning("Please upload both the articles JSON file and the propaganda techniques JSON file.")
+
+    # Handle Custom Text Analysis
+    if analyze_text_button:
+        if user_input:
+            try:
+                with st.spinner("Preprocessing your text..."):
+                    processed_text = preprocess_text(user_input)
+                st.success("Completed text preprocessing.")
+
+                # Load propaganda techniques
+                techniques = load_propaganda_techniques(DEFAULT_CONFIG['propaganda_techniques_file'])
+
+                # Detect propaganda techniques
+                with st.spinner("Detecting propaganda techniques..."):
+                    detected_techniques = detect_propaganda_techniques_in_text(user_input, techniques)
+                if detected_techniques:
+                    st.success("Propaganda techniques detected:")
+                    for technique, keywords in detected_techniques.items():
+                        st.markdown(f"**{technique.title()}**: {', '.join(keywords)}")
+                else:
+                    st.info("No propaganda techniques detected.")
+
+                # Perform NER
+                with st.spinner("Performing Named Entity Recognition (NER)..."):
+                    entities = perform_filtered_ner(user_input)
+                if entities:
+                    st.success("Named Entities detected:")
+                    for ent in entities:
+                        st.markdown(f"{ent['text']} ({ent['label']})")
+                else:
+                    st.info("No relevant entities detected.")
+
+                # Load and predict using propaganda model
+                with st.spinner("Loading transformer model and label encoder..."):
+                    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(
+                        DEFAULT_CONFIG['propaganda_model_file'],
+                        DEFAULT_CONFIG['label_encoder_file']
+                    )
+                st.success("Loaded transformer model and label encoder.")
+
+                with st.spinner("Predicting propaganda techniques..."):
+                    predicted_techniques = predict_with_transformer(
+                        propaganda_model,
+                        propaganda_tokenizer,
+                        propaganda_mlb,
+                        [processed_text],
+                        threshold=0.5
+                    )[0]
+                if predicted_techniques:
+                    st.success("Predicted Propaganda Techniques:")
+                    st.markdown(", ".join(predicted_techniques))
+                else:
+                    st.info("No propaganda techniques predicted.")
+
+                # Load and predict media bias
+                with st.spinner("Loading media bias detection model..."):
+                    bias_model, bias_tokenizer = load_bias_model(DEFAULT_CONFIG['bias_model_file'])
+                st.success("Loaded media bias detection model.")
+
+                # Load or define MultiLabelBinarizer for media bias categories
+                bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
+                if os.path.exists(bias_mlb_file):
+                    bias_mlb = joblib.load(bias_mlb_file)
+                    logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
+                else:
+                    # Define default bias categories
+                    bias_categories = ["Left", "Center", "Right", "Unknown"]
+                    bias_mlb = MultiLabelBinarizer(classes=bias_categories)
+                    bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
+                    # Save default bias label encoder
+                    bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
+                    if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
+                        os.makedirs(bias_label_encoder_dir)
+                    joblib.dump(bias_mlb, bias_mlb_file)
+                    logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
+
+                with st.spinner("Predicting media bias..."):
+                    bias_category = detect_media_bias(user_input, bias_model, bias_tokenizer, bias_mlb, threshold=0.5)
+                st.success(f"Predicted Media Bias Category: **{bias_category}**")
+
+            except Exception as e:
+                logging.error(f"An error occurred during text analysis: {type(e).__name__} - {e}")
+                st.error(f"An error occurred during text analysis: {type(e).__name__} - {e}")
+        else:
+            st.warning("Please enter some text to analyze.")
+
+    # Display Progress Bar (if needed)
+    # Example: Use st.progress() within long-running tasks
+
+    # Note: Since the analysis is handled via button clicks and spinners, explicit progress bars are not added here.
+    # However, for extremely long tasks, you can implement them as needed.
+
+    # Ensure that necessary directories exist
+    for directory in ['models', 'reports', 'logs']:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            logging.info(f"Created directory: {directory}")
 
 # ----------------------------
 # Unit Tests
