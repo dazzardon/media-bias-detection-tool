@@ -4,7 +4,7 @@ import os
 import sys
 import json
 import logging
-import argparse
+import hashlib
 from typing import List, Tuple, Dict
 import pandas as pd
 import swifter
@@ -12,10 +12,7 @@ import re
 import nltk
 from nltk.stem import WordNetLemmatizer
 import spacy
-from tqdm import tqdm
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
     classification_report,
     accuracy_score,
@@ -23,25 +20,21 @@ from sklearn.metrics import (
     f1_score,
     precision_recall_fscore_support
 )
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.svm import LinearSVC
-import gensim
-from gensim import corpora
 import matplotlib.pyplot as plt
 import seaborn as sns
-import networkx as nx
 from transformers import (
     DistilBertTokenizer,
-    DistilBertForSequenceClassification,
-    Trainer,
-    TrainingArguments
+    DistilBertForSequenceClassification
 )
 from bertopic import BERTopic
 import joblib
 import torch
-import unittest
-from collections import defaultdict
 import streamlit as st
+from tqdm import tqdm
+from collections import defaultdict
+
+# Import the authentication module
+import auth
 
 # ----------------------------
 # Initialization
@@ -84,18 +77,18 @@ RELEVANT_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC"}
 # ----------------------------
 
 DEFAULT_CONFIG = {
-    'data_file': 'models/Propaganda_Dataset.json',               # Input JSON data file
     'propaganda_techniques_file': 'models/propaganda_techniques.json',  # Techniques JSON file
-    'bias_model_file': 'models/media_bias_model',                # Media bias model path
-    'propaganda_model_file': 'models/propaganda_detection_model', # Propaganda model path
-    'label_encoder_file': 'models/label_encoder.pkl',            # Label encoder path
-    'log_file': 'logs/propaganda_detection.log',                 # Log file path
-    'bias_report_file': 'reports/media_bias_report.html',        # Report file for media bias detection
-    'propaganda_report_file': 'reports/propaganda_report.html',  # Report file for propaganda detection
-    'metrics_file': 'reports/evaluation_metrics.txt',            # Metrics file for evaluation results
-    'threshold': 1.0,                                           # Threshold for labeling as 'Propaganda'
-    'log_level': 'INFO',  # Default logging level
-    'num_topics': 5,       # Number of topics for BERTopic
+    'bias_model_file': 'models/media_bias_model',                        # Media bias model path
+    'propaganda_model_file': 'models/propaganda_detection_model',         # Propaganda model path
+    'label_encoder_file': 'models/label_encoder.pkl',                     # Label encoder path
+    'log_file': 'logs/propaganda_detection.log',                          # Log file path
+    'bias_report_file': 'reports/media_bias_report.html',                 # Report file for media bias detection
+    'propaganda_report_file': 'reports/propaganda_report.html',           # Report file for propaganda detection
+    'metrics_file': 'reports/evaluation_metrics.txt',                     # Metrics file for evaluation results
+    'misclassification_report_file': 'reports/misclassification_report.txt', # Misclassification report
+    'threshold': 0.5,                                                    # Threshold for labeling as Propaganda
+    'num_topics': 5,                                                      # Number of topics for BERTopic
+    'log_level': 'INFO',                                                  # Default logging level
 }
 
 # ----------------------------
@@ -134,6 +127,9 @@ def setup_logging(log_file: str, log_level: str):
     ch_formatter = logging.Formatter('%(levelname)s - %(message)s')
     ch.setFormatter(ch_formatter)
     logger.addHandler(ch)
+
+# Initialize Logging
+setup_logging(DEFAULT_CONFIG['log_file'], DEFAULT_CONFIG['log_level'])
 
 # ----------------------------
 # Helper Functions
@@ -275,26 +271,6 @@ def perform_filtered_ner(text: str, relevant_labels: set = RELEVANT_ENTITY_LABEL
     except Exception as e:
         logging.error(f"NER processing error for text: {text[:50]}... - {type(e).__name__}: {e}")
         return []
-
-def build_source_network(df: pd.DataFrame) -> nx.Graph:
-    """
-    Build a network graph of sources/authors and their articles.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing article data.
-
-    Returns:
-        nx.Graph: A network graph object representing sources and articles.
-    """
-    G = nx.Graph()
-    for _, row in df.iterrows():
-        source = row.get('source', 'Unknown')
-        article_id = row.get('article_id', 'Unknown')
-        G.add_node(source, type='source')
-        G.add_node(article_id, type='article')
-        G.add_edge(source, article_id)
-    logging.info("Built source network graph.")
-    return G
 
 def generate_enhanced_interactive_report(df: pd.DataFrame, topic_info: pd.DataFrame, report_file: str):
     """
@@ -545,7 +521,7 @@ def perform_detailed_misclassification_analysis(
             f.write("\nTop False Negatives:\n")
             for technique, count in top_false_negatives:
                 f.write(f"- {technique}: {count}\n")
-        
+
         logging.info(f"Detailed misclassification analysis saved to '{report_file}'.")
     except Exception as e:
         logging.error(f"Error during detailed misclassification analysis: {type(e).__name__} - {e}")
@@ -610,94 +586,82 @@ def train_transformer_model(df: pd.DataFrame, model_save_path: str, label_encode
         test_size = len(prop_dataset) - train_size
         train_dataset, test_dataset = torch.utils.data.random_split(prop_dataset, [train_size, test_size])
 
-        # Define training arguments
-        training_args = TrainingArguments(
-            output_dir='./models/results',
-            num_train_epochs=5,
-            per_device_train_batch_size=16,
-            per_device_eval_batch_size=16,
-            warmup_steps=500,
-            weight_decay=0.01,
-            logging_dir='./models/logs',
-            logging_steps=10,
-            evaluation_strategy="epoch",
-            save_strategy="epoch",
-            load_best_model_at_end=True,
-            metric_for_best_model="f1",
-            greater_is_better=True
-        )
+        # Define training parameters
+        epochs = 3
+        batch_size = 8
 
-        # Define Trainer
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=test_dataset,
-            compute_metrics=lambda p: compute_metrics(p, mlb)
-        )
+        # Training Loop
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        model.to(device)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
-        # Train the model
-        trainer.train()
+        for epoch in range(epochs):
+            logging.info(f"Epoch {epoch+1}/{epochs}")
+            model.train()
+            total_loss = 0
+            for i in tqdm(range(0, len(train_dataset), batch_size), desc="Training"):
+                batch = train_dataset[i:i+batch_size]
+                input_ids = torch.stack([item['input_ids'] for item in batch]).to(device)
+                attention_mask = torch.stack([item['attention_mask'] for item in batch]).to(device)
+                labels = torch.stack([item['labels'] for item in batch]).to(device)
 
-        # Evaluate the model
-        eval_results = trainer.evaluate()
-        logging.info(f"Evaluation results: {eval_results}")
-
-        # Get predictions and true labels for misclassification analysis
-        predictions = []
-        true_labels = []
-        for batch in trainer.get_eval_dataloader():
-            outputs = trainer.model(**batch)
-            logits = outputs.logits
-            probs = torch.sigmoid(logits).cpu().numpy()
-            preds = (probs > 0.5).astype(int)
-            predictions.extend(preds)
-            true_labels.extend(batch['labels'].cpu().numpy())
-
-        # Generate classification report
-        report = classification_report(true_labels, predictions, target_names=mlb.classes_, zero_division=0)
-        logging.info(f"Classification Report:\n{report}")
-
-        # Calculate average F1 score
-        f1 = f1_score(true_labels, predictions, average='macro')
-        logging.info(f"Average F1 Score: {f1:.4f}")
+                optimizer.zero_grad()
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+                loss = outputs.loss
+                loss.backward()
+                optimizer.step()
+                total_loss += loss.item()
+            avg_loss = total_loss / (len(train_dataset) / batch_size)
+            logging.info(f"Average training loss: {avg_loss:.4f}")
 
         # Save the model
         model_dir = os.path.dirname(model_save_path)
         if model_dir and not os.path.exists(model_dir):
             os.makedirs(model_dir)
-        trainer.save_model(model_save_path)
+        model.save_pretrained(model_save_path)
         tokenizer.save_pretrained(model_save_path)
         logging.info(f"Transformer model saved to '{model_save_path}'.")
 
-        # Perform misclassification analysis
-        perform_detailed_misclassification_analysis(
-            y_true=true_labels,
-            y_pred=predictions,
-            mlb=mlb,
-            report_file=DEFAULT_CONFIG['metrics_file']
-        )
+        # Evaluate the model
+        model.eval()
+        y_true = []
+        y_pred = []
+        with torch.no_grad():
+            for i in tqdm(range(0, len(test_dataset), batch_size), desc="Evaluating"):
+                batch = test_dataset[i:i+batch_size]
+                input_ids = torch.stack([item['input_ids'] for item in batch]).to(device)
+                attention_mask = torch.stack([item['attention_mask'] for item in batch]).to(device)
+                labels = torch.stack([item['labels'] for item in batch]).cpu().numpy()
+
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+                logits = outputs.logits
+                probs = torch.sigmoid(logits).cpu().numpy()
+                predictions = (probs > 0.5).astype(int)
+
+                y_true.extend(labels)
+                y_pred.extend(predictions)
+
+        # Generate classification report
+        report = classification_report(y_true, y_pred, target_names=mlb.classes_, zero_division=0)
+        logging.info(f"Classification Report:\n{report}")
+
+        # Calculate average F1 score
+        f1 = f1_score(y_true, y_pred, average='macro')
+        logging.info(f"Average F1 Score: {f1:.4f}")
+
+        # Save Evaluation Metrics
+        metrics_dir = os.path.dirname(DEFAULT_CONFIG['metrics_file'])
+        if metrics_dir and not os.path.exists(metrics_dir):
+            os.makedirs(metrics_dir)
+        with open(DEFAULT_CONFIG['metrics_file'], 'w') as f:
+            f.write("Classification Report:\n")
+            f.write(report)
+            f.write(f"\nAverage F1 Score: {f1:.4f}\n")
+        logging.info(f"Evaluation metrics saved to '{DEFAULT_CONFIG['metrics_file']}'.")
 
     except Exception as e:
         logging.error(f"Error training transformer model: {type(e).__name__} - {e}")
         st.error(f"Error training transformer model: {type(e).__name__} - {e}")
-
-def compute_metrics(eval_pred, mlb):
-    """
-    Compute evaluation metrics for the trainer.
-
-    Args:
-        eval_pred: Predictions and labels.
-        mlb (MultiLabelBinarizer): The label binarizer.
-
-    Returns:
-        Dict[str, float]: Dictionary of metrics.
-    """
-    logits, labels = eval_pred
-    probs = torch.sigmoid(torch.tensor(logits))
-    preds = (probs > 0.5).int().numpy()
-    precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='macro', zero_division=0)
-    return {'precision': precision, 'recall': recall, 'f1': f1}
 
 def predict_with_transformer(
     model: DistilBertForSequenceClassification,
@@ -800,364 +764,363 @@ def perform_semi_supervised_learning(
 def main():
     # Set Streamlit page configuration
     st.set_page_config(
-        page_title="Propaganda and Media Bias Detection",
+        page_title="📊 Propaganda and Media Bias Detection",
         layout="wide",
         initial_sidebar_state="expanded",
     )
 
-    # Initialize Logging
-    setup_logging(DEFAULT_CONFIG['log_file'], DEFAULT_CONFIG['log_level'])
+    # Title
+    st.title("📊 Propaganda and Media Bias Detection App")
 
-    st.title("📊 Propaganda and Media Bias Detection in Articles")
+    # Sidebar for Navigation
+    menu = ["Home", "Login", "SignUp"]
+    choice = st.sidebar.selectbox("Menu", menu)
 
-    # Sidebar for Configuration
-    st.sidebar.title("🔧 Configuration")
+    if 'logged_in' not in st.session_state:
+        st.session_state['logged_in'] = False
+        st.session_state['user_email'] = ''
 
-    # File Uploader for JSON Data
-    st.sidebar.subheader("Upload Data")
-    uploaded_file = st.sidebar.file_uploader("Choose a JSON file containing articles", type="json")
+    if choice == "Home":
+        st.subheader("Welcome to the Propaganda Detection App")
+        st.markdown("""
+            This application allows you to analyze articles for propaganda techniques and media bias.
+            Please register or log in to get started.
+        """)
 
-    # File Uploader for Propaganda Techniques JSON
-    techniques_file = st.sidebar.file_uploader("Choose a JSON file for Propaganda Techniques", type="json", key='techniques')
-
-    # Slider for Threshold
-    threshold = st.sidebar.slider("Threshold for Propaganda Detection", 0.0, 1.0, DEFAULT_CONFIG['threshold'], 0.05)
-
-    # Number input for Number of Topics
-    num_topics = st.sidebar.number_input("Number of Topics for BERTopic", min_value=1, max_value=20, value=DEFAULT_CONFIG['num_topics'])
-
-    # Predict Button
-    analyze_button = st.sidebar.button("Analyze Articles")
-
-    # Text Area for Custom Text Analysis
-    st.header("📝 Analyze Custom Text")
-    user_input = st.text_area("Enter text to analyze for propaganda and bias:")
-
-    analyze_text_button = st.button("Analyze Text")
-
-    # Initialize empty DataFrame for results
-    results_df = pd.DataFrame()
-
-    # Handle Uploaded Data
-    if analyze_button:
-        if uploaded_file is not None and techniques_file is not None:
-            try:
-                # Load data
-                data = json.load(uploaded_file)
-                df = pd.json_normalize(data)
-                st.success(f"Loaded data with {len(df)} records.")
-
-                # Ensure 'content' column exists
-                if 'content' not in df.columns and 'Title' in df.columns:
-                    df.rename(columns={'Title': 'content'}, inplace=True)
-                    st.info("Renamed 'Title' column to 'content'.")
-                elif 'content' not in df.columns:
-                    st.error("The 'content' column is missing from the dataset.")
-                    st.stop()
-
-                # Load propaganda techniques
-                techniques = load_propaganda_techniques(DEFAULT_CONFIG['propaganda_techniques_file'])
-
-                # Preprocess text
-                with st.spinner("Preprocessing text data..."):
-                    df['processed_content'] = df['content'].astype(str).swifter.apply(preprocess_text)
-                st.success("Completed text preprocessing.")
-
-                # Detect propaganda techniques
-                with st.spinner("Detecting propaganda techniques in articles..."):
-                    df['Detected_Techniques'] = df['content'].astype(str).swifter.apply(
-                        lambda x: detect_propaganda_techniques_in_text(x, techniques)
-                    )
-                st.success("Completed propaganda techniques detection.")
-
-                # Perform NER
-                with st.spinner("Performing Named Entity Recognition (NER)..."):
-                    df['Entities'] = df['content'].astype(str).swifter.apply(perform_filtered_ner)
-                st.success("Completed Named Entity Recognition.")
-
-                # Prepare labels
-                df['Is_Propaganda'] = df['Detected_Techniques'].apply(lambda x: True if x else False)
-                df['Techniques'] = df['Detected_Techniques']
-
-                # Train Transformer Model
-                with st.spinner("Training transformer model... This may take a while."):
-                    train_transformer_model(df, DEFAULT_CONFIG['propaganda_model_file'], DEFAULT_CONFIG['label_encoder_file'])
-                st.success("Transformer model trained successfully.")
-
-                # Load trained model and label encoder
-                with st.spinner("Loading trained transformer model and label encoder..."):
-                    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(
-                        DEFAULT_CONFIG['propaganda_model_file'],
-                        DEFAULT_CONFIG['label_encoder_file']
-                    )
-                st.success("Loaded transformer model and label encoder.")
-
-                # Predict Propaganda Techniques
-                with st.spinner("Detecting propaganda techniques in articles..."):
-                    df['Predicted_Techniques'] = predict_with_transformer(
-                        propaganda_model,
-                        propaganda_tokenizer,
-                        propaganda_mlb,
-                        df['processed_content'].tolist(),
-                        threshold=0.5
-                    )
-                st.success("Completed propaganda techniques detection.")
-
-                # Topic Modeling
-                with st.spinner("Performing topic modeling with BERTopic..."):
-                    topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), num_topics)
-                st.success("Completed topic modeling.")
-
-                # Media Bias Detection
-                with st.spinner("Loading media bias detection model..."):
-                    bias_model, bias_tokenizer = load_bias_model(DEFAULT_CONFIG['bias_model_file'])
-                st.success("Loaded media bias detection model.")
-
-                # Load or define MultiLabelBinarizer for media bias categories
-                bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
-                if os.path.exists(bias_mlb_file):
-                    bias_mlb = joblib.load(bias_mlb_file)
-                    logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
-                else:
-                    # Define default bias categories
-                    bias_categories = ["Left", "Center", "Right", "Unknown"]
-                    bias_mlb = MultiLabelBinarizer(classes=bias_categories)
-                    bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
-                    # Save default bias label encoder
-                    bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
-                    if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
-                        os.makedirs(bias_label_encoder_dir)
-                    joblib.dump(bias_mlb, bias_mlb_file)
-                    logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
-
-                # Predict Media Bias
-                with st.spinner("Detecting media bias in articles..."):
-                    df['Bias_Category'] = df['processed_content'].apply(
-                        lambda x: detect_media_bias(x, bias_model, bias_tokenizer, bias_mlb, threshold=0.5)
-                    )
-                st.success("Completed media bias detection.")
-
-                # Generate Reports
-                with st.spinner("Generating reports..."):
-                    generate_enhanced_interactive_report(df, topic_info, DEFAULT_CONFIG['propaganda_report_file'])
-                    generate_media_bias_report(df, DEFAULT_CONFIG['bias_report_file'])
-                st.success("Reports generated successfully.")
-
-                # Generate Evaluation Metrics
-                with st.spinner("Calculating evaluation metrics..."):
-                    generate_evaluation_metrics(df, propaganda_mlb, DEFAULT_CONFIG['metrics_file'])
-                st.success("Evaluation metrics calculated.")
-
-                # Perform Misclassification Analysis
-                with st.spinner("Performing misclassification analysis..."):
-                    perform_detailed_misclassification_analysis(
-                        y_true=propaganda_mlb.transform(df['Techniques']),
-                        y_pred=propaganda_mlb.transform(df['Predicted_Techniques']),
-                        mlb=propaganda_mlb,
-                        report_file=DEFAULT_CONFIG['misclassification_report_file']
-                    )
-                st.success("Misclassification analysis completed.")
-
-                # Display Results
-                st.subheader("📊 Annotated Data")
-                st.dataframe(df.head())
-
-                st.subheader("📈 Propaganda Distribution")
-                fig, ax = plt.subplots()
-                sns.countplot(data=df, x='Is_Propaganda', ax=ax)
-                plt.title('Propaganda Distribution')
-                st.pyplot(fig)
-
-                st.subheader("📚 Topic Modeling")
-                if not topic_info.empty:
-                    st.write(topic_info)
-                else:
-                    st.write("No topics were identified.")
-
-                st.subheader("🗂 Propaganda Techniques Detected")
-                st.write(df[['article_id', 'Predicted_Techniques']].head())
-
-                st.subheader("🧠 Media Bias Detection")
-                st.write(df[['article_id', 'Bias_Category']].head())
-
-                # Provide Download Button
-                csv_data = df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="💾 Download Annotated Data as CSV",
-                    data=csv_data,
-                    file_name='annotated_data.csv',
-                    mime='text/csv',
-                )
-
-                # Display Evaluation Metrics
-                st.subheader("📋 Evaluation Metrics")
-                with open(DEFAULT_CONFIG['metrics_file'], 'r') as f:
-                    metrics_content = f.read()
-                st.text(metrics_content)
-
-                # Display Misclassification Report
-                st.subheader("🔍 Misclassification Analysis")
-                with open(DEFAULT_CONFIG['misclassification_report_file'], 'r') as f:
-                    misclass_content = f.read()
-                st.text(misclass_content)
-
-            except Exception as e:
-                logging.error(f"An error occurred during analysis: {type(e).__name__} - {e}")
-                st.error(f"An error occurred during analysis: {type(e).__name__} - {e}")
+    elif choice == "Login":
+        if st.session_state['logged_in']:
+            st.info(f"Logged in as {st.session_state['user_email']}")
+            if st.button("Logout"):
+                st.session_state['logged_in'] = False
+                st.session_state['user_email'] = ''
+                st.success("Logged out successfully.")
         else:
-            st.warning("Please upload both the articles JSON file and the propaganda techniques JSON file.")
+            st.subheader("Login to Your Account")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type='password')
 
-    # Handle Custom Text Analysis
-    if analyze_text_button:
-        if user_input:
-            try:
-                with st.spinner("Preprocessing your text..."):
-                    processed_text = preprocess_text(user_input)
-                st.success("Completed text preprocessing.")
-
-                # Load propaganda techniques
-                techniques = load_propaganda_techniques(DEFAULT_CONFIG['propaganda_techniques_file'])
-
-                # Detect propaganda techniques
-                with st.spinner("Detecting propaganda techniques..."):
-                    detected_techniques = detect_propaganda_techniques_in_text(user_input, techniques)
-                if detected_techniques:
-                    st.success("Propaganda techniques detected:")
-                    for technique, keywords in detected_techniques.items():
-                        st.markdown(f"**{technique.title()}**: {', '.join(keywords)}")
+            if st.button("Login"):
+                if auth.verify_user(email, password):
+                    st.session_state['logged_in'] = True
+                    st.session_state['user_email'] = email
+                    st.success(f"Logged in as {email}")
                 else:
-                    st.info("No propaganda techniques detected.")
+                    st.error("Invalid email or password.")
 
-                # Perform NER
-                with st.spinner("Performing Named Entity Recognition (NER)..."):
-                    entities = perform_filtered_ner(user_input)
-                if entities:
-                    st.success("Named Entities detected:")
-                    for ent in entities:
-                        st.markdown(f"{ent['text']} ({ent['label']})")
-                else:
-                    st.info("No relevant entities detected.")
-
-                # Load and predict using propaganda model
-                with st.spinner("Loading transformer model and label encoder..."):
-                    propaganda_model, propaganda_tokenizer, propaganda_mlb = load_transformer_model(
-                        DEFAULT_CONFIG['propaganda_model_file'],
-                        DEFAULT_CONFIG['label_encoder_file']
-                    )
-                st.success("Loaded transformer model and label encoder.")
-
-                with st.spinner("Predicting propaganda techniques..."):
-                    predicted_techniques = predict_with_transformer(
-                        propaganda_model,
-                        propaganda_tokenizer,
-                        propaganda_mlb,
-                        [processed_text],
-                        threshold=0.5
-                    )[0]
-                if predicted_techniques:
-                    st.success("Predicted Propaganda Techniques:")
-                    st.markdown(", ".join(predicted_techniques))
-                else:
-                    st.info("No propaganda techniques predicted.")
-
-                # Load and predict media bias
-                with st.spinner("Loading media bias detection model..."):
-                    bias_model, bias_tokenizer = load_bias_model(DEFAULT_CONFIG['bias_model_file'])
-                st.success("Loaded media bias detection model.")
-
-                # Load or define MultiLabelBinarizer for media bias categories
-                bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
-                if os.path.exists(bias_mlb_file):
-                    bias_mlb = joblib.load(bias_mlb_file)
-                    logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
-                else:
-                    # Define default bias categories
-                    bias_categories = ["Left", "Center", "Right", "Unknown"]
-                    bias_mlb = MultiLabelBinarizer(classes=bias_categories)
-                    bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
-                    # Save default bias label encoder
-                    bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
-                    if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
-                        os.makedirs(bias_label_encoder_dir)
-                    joblib.dump(bias_mlb, bias_mlb_file)
-                    logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
-
-                with st.spinner("Predicting media bias..."):
-                    bias_category = detect_media_bias(user_input, bias_model, bias_tokenizer, bias_mlb, threshold=0.5)
-                st.success(f"Predicted Media Bias Category: **{bias_category}**")
-
-            except Exception as e:
-                logging.error(f"An error occurred during text analysis: {type(e).__name__} - {e}")
-                st.error(f"An error occurred during text analysis: {type(e).__name__} - {e}")
+    elif choice == "SignUp":
+        if st.session_state['logged_in']:
+            st.info(f"Already logged in as {st.session_state['user_email']}")
+            if st.button("Logout"):
+                st.session_state['logged_in'] = False
+                st.session_state['user_email'] = ''
+                st.success("Logged out successfully.")
         else:
-            st.warning("Please enter some text to analyze.")
+            st.subheader("Create a New Account")
+            email = st.text_input("Email", key='signup_email')
+            password = st.text_input("Password", type='password', key='signup_password')
+            confirm_password = st.text_input("Confirm Password", type='password', key='signup_confirm_password')
 
-    # Display Progress Bar (if needed)
-    # Example: Use st.progress() within long-running tasks
+            if st.button("SignUp"):
+                if not email or not password or not confirm_password:
+                    st.error("Please fill out all fields.")
+                elif password != confirm_password:
+                    st.error("Passwords do not match.")
+                else:
+                    if auth.register_user(email, password):
+                        st.success("Account created successfully. You can now log in.")
+                    else:
+                        st.warning("An account with this email already exists.")
 
-    # Note: Since the analysis is handled via button clicks and spinners, explicit progress bars are not added here.
-    # However, for extremely long tasks, you can implement them as needed.
+    # After Login: Main Functionalities
+    if st.session_state['logged_in']:
+        st.header("🔍 Analyze Articles for Propaganda and Media Bias")
 
-    # Ensure that necessary directories exist
-    for directory in ['models', 'reports', 'logs']:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-            logging.info(f"Created directory: {directory}")
+        # Sidebar for Configuration
+        st.sidebar.title("🔧 Configuration")
 
-# ----------------------------
-# Unit Tests
-# ----------------------------
+        # File Uploader for Articles JSON
+        uploaded_file = st.sidebar.file_uploader("📂 Upload Articles JSON File", type="json")
 
-def run_tests():
-    """Run unit tests for critical functions."""
-    class TestPropagandaDetection(unittest.TestCase):
-        def setUp(self):
-            self.techniques = {
-                "appeal to authority": ["experts say", "according to"],
-                "appeals to emotion": ["heartbreaking", "tragic", "joyful"],
-                "bandwagon": ["everyone is doing it", "join the majority"],
-                "positive framing": ["amazing", "beneficial", "successful"],
-                "negative framing": ["disastrous", "harmful", "catastrophic"],
-                # Add other techniques with keywords as needed
-            }
+        # File Uploader for Propaganda Techniques JSON
+        techniques_file = st.sidebar.file_uploader("📂 Upload Propaganda Techniques JSON File", type="json", key='techniques')
 
-        def test_preprocess_text(self):
-            text = "This is a MUST to fight the ENEMY."
-            processed = preprocess_text(text)
-            self.assertIn('must', processed)
-            self.assertIn('fight', processed)
-            self.assertIn('enemy', processed)
-            self.assertNotIn('is', processed)  # stopword should be removed
+        # Slider for Threshold
+        threshold = st.sidebar.slider("⚖️ Threshold for Propaganda Detection", 0.0, 1.0, DEFAULT_CONFIG['threshold'], 0.05)
 
-        def test_detect_propaganda_techniques_in_text(self):
-            text = "According to experts say, everyone is doing it because it is amazing."
-            detected = detect_propaganda_techniques_in_text(text, self.techniques)
-            expected = {
-                "appeal to authority": ["experts say"],
-                "bandwagon": ["everyone is doing it"],
-                "positive framing": ["amazing"]
-            }
-            self.assertEqual(detected, expected)
+        # Number input for Number of Topics
+        num_topics = st.sidebar.number_input("🧠 Number of Topics for BERTopic", min_value=1, max_value=20, value=DEFAULT_CONFIG['num_topics'])
 
-        def test_perform_filtered_ner(self):
-            text = "President Biden met with leaders from the United Nations in New York."
-            entities = perform_filtered_ner(text)
-            expected = [
-                {"text": "President Biden", "label": "PERSON"},
-                {"text": "United Nations", "label": "ORG"},
-                {"text": "New York", "label": "GPE"}
-            ]
-            self.assertEqual(entities, expected)
+        # Button to Start Analysis
+        analyze_button = st.sidebar.button("🔍 Analyze Articles")
 
-    unittest.main(argv=[''], exit=False)
+        # Text Area for Custom Text Analysis
+        st.header("📝 Analyze Custom Text")
+        user_input = st.text_area("Enter text to analyze for propaganda and bias:")
 
-# ----------------------------
-# Entry Point
-# ----------------------------
+        analyze_text_button = st.button("🔍 Analyze Text")
 
-if __name__ == "__main__":
-    # Check if tests are to be run
-    if '--test' in sys.argv:
-        run_tests()
-    else:
-        main()
+        # Handle Uploaded Data Analysis
+        if analyze_button:
+            if uploaded_file is not None and techniques_file is not None:
+                try:
+                    # Load Articles Data
+                    data = json.load(uploaded_file)
+                    df = pd.json_normalize(data)
+                    st.success(f"✅ Loaded data with {len(df)} records.")
+
+                    # Ensure 'content' column exists
+                    if 'content' not in df.columns and 'Title' in df.columns:
+                        df.rename(columns={'Title': 'content'}, inplace=True)
+                        st.info("🔄 Renamed 'Title' column to 'content'.")
+                    elif 'content' not in df.columns:
+                        st.error("❌ The 'content' column is missing from the dataset.")
+                        st.stop()
+
+                    # Save Propaganda Techniques JSON to file
+                    techniques_path = DEFAULT_CONFIG['propaganda_techniques_file']
+                    with open(techniques_path, 'w', encoding='utf-8') as f:
+                        json.dump(json.load(techniques_file), f, ensure_ascii=False, indent=4)
+                    st.success("✅ Propaganda techniques file uploaded successfully.")
+
+                    # Load Propaganda Techniques
+                    techniques = load_propaganda_techniques(techniques_path)
+
+                    # Preprocess Text
+                    with st.spinner("🧹 Preprocessing text data..."):
+                        df['processed_content'] = df['content'].astype(str).swifter.apply(preprocess_text)
+                    st.success("✅ Completed text preprocessing.")
+
+                    # Detect Propaganda Techniques
+                    with st.spinner("🔍 Detecting propaganda techniques in articles..."):
+                        df['Detected_Techniques'] = df['content'].astype(str).swifter.apply(
+                            lambda x: detect_propaganda_techniques_in_text(x, techniques)
+                        )
+                    st.success("✅ Completed propaganda techniques detection.")
+
+                    # Perform NER
+                    with st.spinner("🧠 Performing Named Entity Recognition (NER)..."):
+                        df['Entities'] = df['content'].astype(str).swifter.apply(perform_filtered_ner)
+                    st.success("✅ Completed Named Entity Recognition.")
+
+                    # Prepare Labels
+                    df['Is_Propaganda'] = df['Detected_Techniques'].apply(lambda x: True if x else False)
+                    df['Techniques'] = df['Detected_Techniques']
+
+                    # Train Transformer Model
+                    with st.spinner("🏋️‍♂️ Training transformer model... This may take a while."):
+                        train_transformer_model(df, DEFAULT_CONFIG['propaganda_model_file'], DEFAULT_CONFIG['label_encoder_file'])
+                    st.success("✅ Transformer model trained successfully.")
+
+                    # Load Trained Model and Label Encoder
+                    with st.spinner("📦 Loading trained transformer model and label encoder..."):
+                        propaganda_model, propaganda_tokenizer, propaganda_mlb = auth.load_transformer_model(
+                            DEFAULT_CONFIG['propaganda_model_file'],
+                            DEFAULT_CONFIG['label_encoder_file']
+                        )
+                    st.success("✅ Loaded transformer model and label encoder.")
+
+                    # Predict Propaganda Techniques
+                    with st.spinner("🔍 Detecting propaganda techniques in articles..."):
+                        df['Predicted_Techniques'] = predict_with_transformer(
+                            propaganda_model,
+                            propaganda_tokenizer,
+                            propaganda_mlb,
+                            df['processed_content'].tolist(),
+                            threshold=0.5
+                        )
+                    st.success("✅ Completed propaganda techniques detection.")
+
+                    # Topic Modeling
+                    with st.spinner("🧠 Performing topic modeling with BERTopic..."):
+                        topic_info, topic_freq, topic_model_instance = perform_topic_modeling(df['processed_content'].tolist(), num_topics)
+                    st.success("✅ Completed topic modeling.")
+
+                    # Media Bias Detection
+                    with st.spinner("🔍 Loading media bias detection model..."):
+                        bias_model, bias_tokenizer = load_bias_model(DEFAULT_CONFIG['bias_model_file'])
+                    st.success("✅ Loaded media bias detection model.")
+
+                    # Load or Define MultiLabelBinarizer for Media Bias Categories
+                    bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
+                    if os.path.exists(bias_mlb_file):
+                        bias_mlb = joblib.load(bias_mlb_file)
+                        logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
+                    else:
+                        # Define default bias categories
+                        bias_categories = ["Left", "Center", "Right", "Unknown"]
+                        bias_mlb = MultiLabelBinarizer(classes=bias_categories)
+                        bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
+                        # Save default bias label encoder
+                        bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
+                        if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
+                            os.makedirs(bias_label_encoder_dir)
+                        joblib.dump(bias_mlb, bias_mlb_file)
+                        logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
+
+                    # Predict Media Bias
+                    with st.spinner("🔍 Detecting media bias in articles..."):
+                        df['Bias_Category'] = df['processed_content'].apply(
+                            lambda x: detect_media_bias(x, bias_model, bias_tokenizer, bias_mlb, threshold=0.5)
+                        )
+                    st.success("✅ Completed media bias detection.")
+
+                    # Generate Reports
+                    with st.spinner("📄 Generating reports..."):
+                        generate_enhanced_interactive_report(df, topic_info, DEFAULT_CONFIG['propaganda_report_file'])
+                        generate_media_bias_report(df, DEFAULT_CONFIG['bias_report_file'])
+                    st.success("✅ Reports generated successfully.")
+
+                    # Generate Evaluation Metrics
+                    with st.spinner("📈 Calculating evaluation metrics..."):
+                        generate_evaluation_metrics(df, propaganda_mlb, DEFAULT_CONFIG['metrics_file'])
+                    st.success("✅ Evaluation metrics calculated.")
+
+                    # Perform Misclassification Analysis
+                    with st.spinner("🔍 Performing misclassification analysis..."):
+                        perform_detailed_misclassification_analysis(
+                            y_true=propaganda_mlb.transform(df['Techniques']),
+                            y_pred=propaganda_mlb.transform(df['Predicted_Techniques']),
+                            mlb=propaganda_mlb,
+                            report_file=DEFAULT_CONFIG['misclassification_report_file']
+                        )
+                    st.success("✅ Misclassification analysis completed.")
+
+                    # Display Results
+                    st.subheader("📊 Annotated Data")
+                    st.dataframe(df.head())
+
+                    st.subheader("📈 Propaganda Distribution")
+                    fig, ax = plt.subplots()
+                    sns.countplot(data=df, x='Is_Propaganda', ax=ax)
+                    plt.title('Propaganda Distribution')
+                    st.pyplot(fig)
+
+                    st.subheader("🧠 Topic Modeling")
+                    if not topic_info.empty:
+                        st.write(topic_info)
+                    else:
+                        st.write("No topics were identified.")
+
+                    st.subheader("🗂 Propaganda Techniques Detected")
+                    st.write(df[['article_id', 'Predicted_Techniques']].head())
+
+                    st.subheader("🧠 Media Bias Detection")
+                    st.write(df[['article_id', 'Bias_Category']].head())
+
+                    # Provide Download Button
+                    csv_data = df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="💾 Download Annotated Data as CSV",
+                        data=csv_data,
+                        file_name='annotated_data.csv',
+                        mime='text/csv',
+                    )
+
+                    # Display Evaluation Metrics
+                    st.subheader("📋 Evaluation Metrics")
+                    with open(DEFAULT_CONFIG['metrics_file'], 'r') as f:
+                        metrics_content = f.read()
+                    st.text(metrics_content)
+
+                    # Display Misclassification Report
+                    st.subheader("🔍 Misclassification Analysis")
+                    with open(DEFAULT_CONFIG['misclassification_report_file'], 'r') as f:
+                        misclass_content = f.read()
+                    st.text(misclass_content)
+
+                except Exception as e:
+                    logging.error(f"An error occurred during analysis: {type(e).__name__} - {e}")
+                    st.error(f"An error occurred during analysis: {type(e).__name__} - {e}")
+            else:
+                st.warning("⚠️ Please upload both the articles JSON file and the propaganda techniques JSON file.")
+
+        # Handle Custom Text Analysis
+        if analyze_text_button:
+            if user_input:
+                try:
+                    with st.spinner("🧹 Preprocessing your text..."):
+                        processed_text = preprocess_text(user_input)
+                    st.success("✅ Completed text preprocessing.")
+
+                    # Load Propaganda Techniques
+                    techniques_path = DEFAULT_CONFIG['propaganda_techniques_file']
+                    techniques = load_propaganda_techniques(techniques_path)
+
+                    # Detect Propaganda Techniques
+                    with st.spinner("🔍 Detecting propaganda techniques..."):
+                        detected_techniques = detect_propaganda_techniques_in_text(user_input, techniques)
+                    if detected_techniques:
+                        st.success("✅ Propaganda techniques detected:")
+                        for technique, keywords in detected_techniques.items():
+                            st.markdown(f"**{technique.title()}**: {', '.join(keywords)}")
+                    else:
+                        st.info("ℹ️ No propaganda techniques detected.")
+
+                    # Perform NER
+                    with st.spinner("🧠 Performing Named Entity Recognition (NER)..."):
+                        entities = perform_filtered_ner(user_input)
+                    if entities:
+                        st.success("✅ Named Entities detected:")
+                        for ent in entities:
+                            st.markdown(f"{ent['text']} ({ent['label']})")
+                    else:
+                        st.info("ℹ️ No relevant entities detected.")
+
+                    # Load Trained Model and Label Encoder
+                    with st.spinner("📦 Loading transformer model and label encoder..."):
+                        propaganda_model, propaganda_tokenizer, propaganda_mlb = auth.load_transformer_model(
+                            DEFAULT_CONFIG['propaganda_model_file'],
+                            DEFAULT_CONFIG['label_encoder_file']
+                        )
+                    st.success("✅ Loaded transformer model and label encoder.")
+
+                    # Predict Propaganda Techniques
+                    with st.spinner("🔍 Predicting propaganda techniques..."):
+                        predicted_techniques = predict_with_transformer(
+                            propaganda_model,
+                            propaganda_tokenizer,
+                            propaganda_mlb,
+                            [processed_text],
+                            threshold=0.5
+                        )[0]
+                    if predicted_techniques:
+                        st.success("✅ Predicted Propaganda Techniques:")
+                        st.markdown(", ".join(predicted_techniques))
+                    else:
+                        st.info("ℹ️ No propaganda techniques predicted.")
+
+                    # Load Media Bias Detection Model
+                    with st.spinner("🔍 Loading media bias detection model..."):
+                        bias_model, bias_tokenizer = load_bias_model(DEFAULT_CONFIG['bias_model_file'])
+                    st.success("✅ Loaded media bias detection model.")
+
+                    # Load or Define MultiLabelBinarizer for Media Bias Categories
+                    bias_mlb_file = DEFAULT_CONFIG['label_encoder_file'].replace('label_encoder.pkl', 'bias_label_encoder.pkl')
+                    if os.path.exists(bias_mlb_file):
+                        bias_mlb = joblib.load(bias_mlb_file)
+                        logging.info(f"Loaded media bias label encoder from '{bias_mlb_file}'.")
+                    else:
+                        # Define default bias categories
+                        bias_categories = ["Left", "Center", "Right", "Unknown"]
+                        bias_mlb = MultiLabelBinarizer(classes=bias_categories)
+                        bias_mlb.fit([["Left"], ["Center"], ["Right"], ["Unknown"]])
+                        # Save default bias label encoder
+                        bias_label_encoder_dir = os.path.dirname(bias_mlb_file)
+                        if bias_label_encoder_dir and not os.path.exists(bias_label_encoder_dir):
+                            os.makedirs(bias_label_encoder_dir)
+                        joblib.dump(bias_mlb, bias_mlb_file)
+                        logging.info(f"Default media bias label encoder saved to '{bias_mlb_file}'.")
+
+                    # Predict Media Bias
+                    with st.spinner("🔍 Predicting media bias..."):
+                        bias_category = detect_media_bias(user_input, bias_model, bias_tokenizer, bias_mlb, threshold=0.5)
+                    st.success(f"✅ Predicted Media Bias Category: **{bias_category}**")
+
+                except Exception as e:
+                    logging.error(f"An error occurred during text analysis: {type(e).__name__} - {e}")
+                    st.error(f"An error occurred during text analysis: {type(e).__name__} - {e}")
+            else:
+                st.warning("⚠️ Please enter some text to analyze.")
+
+if __name__ == '__main__':
+    main()
