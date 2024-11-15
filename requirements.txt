@@ -1,18 +1,18 @@
 # Streamlit and basic dependencies
-streamlit==1.20.0  # Adjust as needed for compatibility
+streamlit==1.10.0  # Adjust as needed for compatibility
 setuptools  # Includes distutils
 
-# Core Python packages
-numpy==1.21.6
-pandas==1.3.5
-scikit-learn==1.0.2
+# Core Python packages with broader compatibility
+numpy==1.19.5
+pandas==1.1.5
+scikit-learn==0.24.2
 
 # Torch and NLP dependencies with compatible versions
-torch==1.12.1
+torch==1.9.1
 sentencepiece==0.1.91
 tokenizers==0.10.3
-transformers==4.17.0  # Ensure this version works with the above tokenizers
+transformers==4.11.0  # Ensure compatibility with the above packages
 
 # Additional libraries if used in your app
-requests==2.27.1
-beautifulsoup4==4.10.0  # If HTML parsing is required
+requests==2.25.1
+beautifulsoup4==4.9.3  # If HTML parsing is required
