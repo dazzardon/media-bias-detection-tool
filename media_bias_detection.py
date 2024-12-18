@@ -1,4 +1,4 @@
-# media_bias_detection.py
+# app.py
 
 import streamlit as st
 import logging
@@ -15,21 +15,8 @@ from urllib.parse import urlparse
 import re
 import unicodedata
 import ssl
-import plotly.express as px
-import torch
-import sys
-from pathlib import Path
-
-# Import user management functions
-from user_utils import (
-    create_user,
-    get_user,
-    verify_password,
-    reset_password,
-    load_default_bias_terms,
-    save_analysis_to_history,
-    load_user_history
-)
+import sqlite3
+import bcrypt
 
 # --- Configure Logging ---
 logging.basicConfig(
@@ -39,47 +26,160 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# --- Database Setup ---
+DB_PATH = "users.db"
+
+def get_connection():
+    """
+    Establishes a connection to the SQLite database.
+    Creates the users table if it doesn't exist.
+    """
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        # Create users table if it doesn't exist
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                password TEXT NOT NULL
+            )
+        """)
+        conn.commit()
+        logger.info("Connected to the database and ensured users table exists.")
+        return conn
+    except Exception as e:
+        logger.error(f"Error connecting to the database: {e}")
+        return None
+
+def create_user(email, name, password):
+    """
+    Creates a new user with the provided details.
+    Passwords are hashed before storing.
+    Returns True if successful, else False.
+    """
+    try:
+        conn = get_connection()
+        if conn is None:
+            return False
+        c = conn.cursor()
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        # Insert the new user
+        c.execute("INSERT INTO users (email, name, password) VALUES (?, ?, ?)",
+                  (email, name, hashed_password))
+        conn.commit()
+        conn.close()
+        logger.info(f"User '{email}' created successfully.")
+        return True
+    except sqlite3.IntegrityError as ie:
+        if 'UNIQUE constraint failed: users.email' in str(ie):
+            logger.error(f"Email '{email}' is already registered.")
+        else:
+            logger.error(f"Integrity Error: {ie}")
+        return False
+    except Exception as e:
+        logger.error(f"Error creating user '{email}': {e}")
+        return False
+
+def get_user(email):
+    """
+    Retrieves a user from the database by email.
+    Returns the user record if found, else None.
+    """
+    try:
+        conn = get_connection()
+        if conn is None:
+            return None
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = c.fetchone()
+        conn.close()
+        if user:
+            logger.info(f"User with email '{email}' retrieved successfully.")
+        else:
+            logger.info(f"User with email '{email}' not found.")
+        return user
+    except Exception as e:
+        logger.error(f"Error fetching user '{email}': {e}")
+        return None
+
+def verify_password(email, password):
+    """
+    Verifies a user's password.
+    Returns True if the password is correct, else False.
+    """
+    try:
+        user = get_user(email)
+        if user:
+            stored_password = user[3]  # Assuming password is the 4th column
+            is_correct = bcrypt.checkpw(password.encode('utf-8'), stored_password)
+            if is_correct:
+                logger.info(f"Password for user '{email}' verified successfully.")
+            else:
+                logger.info(f"Password verification failed for user '{email}'.")
+            return is_correct
+        else:
+            logger.info(f"User '{email}' does not exist for password verification.")
+            return False
+    except Exception as e:
+        logger.error(f"Error verifying password for user '{email}': {e}")
+        return False
+
+def reset_password(email, new_password):
+    """
+    Resets the password for a given email.
+    Returns True if successful, else False.
+    """
+    try:
+        conn = get_connection()
+        if conn is None:
+            return False
+        c = conn.cursor()
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+        c.execute("UPDATE users SET password = ? WHERE email = ?", (hashed_password, email))
+        conn.commit()
+        if c.rowcount == 0:
+            logger.error(f"User '{email}' not found for password reset.")
+            conn.close()
+            return False
+        conn.close()
+        logger.info(f"Password reset successfully for user '{email}'.")
+        return True
+    except Exception as e:
+        logger.error(f"Error resetting password for user '{email}': {e}")
+        return False
+
 # --- Initialize Models ---
 @st.cache_resource
 def initialize_models():
+    # Initialize Sentiment Analysis Model
+    sentiment_pipeline_model = pipeline(
+        "sentiment-analysis",
+        model="nlptown/bert-base-multilingual-uncased-sentiment",
+        device=-1  # Use CPU
+    )
+    # Initialize Propaganda Detection Model (Using IDA-SERICS/PropagandaDetection)
+    propaganda_pipeline_model = pipeline(
+        "text-classification",
+        model="IDA-SERICS/PropagandaDetection",
+        device=-1  # Use CPU
+    )
+    # Initialize SpaCy NLP Model
     try:
-        # Initialize Sentiment Analysis Model
-        sentiment_pipeline_model = pipeline(
-            "sentiment-analysis",
-            model="nlptown/bert-base-multilingual-uncased-sentiment",
-            device=-1  # Use CPU
-        )
-        # Initialize Propaganda Detection Model
-        propaganda_pipeline_model = pipeline(
-            "text-classification",
-            model="IDA-SERICS/PropagandaDetection",
-            device=-1  # Use CPU
-        )
-        # Initialize SpaCy NLP Model from local path
-        from spacy.util import load_model_from_path
+        nlp = spacy.load("en_core_web_sm")
+    except Exception:
+        import spacy.cli
+        spacy.cli.download("en_core_web_sm")
+        nlp = spacy.load("en_core_web_sm")
 
-        # Construct the absolute model path
-        script_dir = Path(__file__).parent
-        model_path = script_dir / 'models' / 'en_core_web_sm-3.5.0'
-
-        if not model_path.exists():
-            logger.error(f"SpaCy model directory not found at {model_path}")
-            st.error("SpaCy model directory not found. Please ensure the model is correctly extracted and present in the 'models/' directory.")
-            return None
-
-        nlp = load_model_from_path(model_path)
-
-        models = {
-            'sentiment_pipeline': sentiment_pipeline_model,
-            'propaganda_pipeline': propaganda_pipeline_model,
-            'nlp': nlp
-        }
-        logger.info("Models initialized successfully.")
-        return models
-    except Exception as e:
-        logger.error(f"Error initializing models: {e}")
-        st.error("Failed to initialize NLP models. Please check the logs for more details.")
-        return None
+    models = {
+        'sentiment_pipeline': sentiment_pipeline_model,
+        'propaganda_pipeline': propaganda_pipeline_model,
+        'nlp': nlp
+    }
+    return models
 
 # --- Helper Functions ---
 
@@ -152,23 +252,139 @@ def preprocess_text(text):
     # Additional cleaning steps can be added here
     return text
 
-def load_custom_bias_terms(user_bias_terms):
-    """
-    Combines default bias terms with user-defined bias terms.
-    """
-    default_terms = load_default_bias_terms()
-    user_terms = [term.lower() for term in user_bias_terms]
-    combined_terms = list(set(default_terms + user_terms))
-    return combined_terms
+def load_default_bias_terms():
+    bias_terms = [
+        'alarming',
+        'allegations',
+        'unfit',
+        'aggressive',
+        'alleged',
+        'apparently',
+        'arguably',
+        'claims',
+        'controversial',
+        'disputed',
+        'insists',
+        'questionable',
+        'reportedly',
+        'rumored',
+        'suggests',
+        'supposedly',
+        'unconfirmed',
+        'suspected',
+        'reckless',
+        'radical',
+        'extremist',
+        'biased',
+        'manipulative',
+        'deceptive',
+        'unbelievable',
+        'incredible',
+        'shocking',
+        'outrageous',
+        'bizarre',
+        'absurd',
+        'ridiculous',
+        'disgraceful',
+        'disgusting',
+        'horrible',
+        'terrible',
+        'unacceptable',
+        'unfair',
+        'scandalous',
+        'suspicious',
+        'illegal',
+        'illegitimate',
+        'immoral',
+        'corrupt',
+        'criminal',
+        'dangerous',
+        'threatening',
+        'harmful',
+        'menacing',
+        'disturbing',
+        'distressing',
+        'troubling',
+        'fearful',
+        'afraid',
+        'panic',
+        'terror',
+        'catastrophe',
+        'disaster',
+        'chaos',
+        'crisis',
+        'collapse',
+        'failure',
+        'ruin',
+        'devastation',
+        'suffering',
+        'misery',
+        'pain',
+        'dreadful',
+        'awful',
+        'nasty',
+        'vile',
+        'vicious',
+        'brutal',
+        'violent',
+        'greedy',
+        'selfish',
+        'arrogant',
+        'ignorant',
+        'stupid',
+        'unwise',
+        'illogical',
+        'unreasonable',
+        'delusional',
+        'paranoid',
+        'obsessed',
+        'fanatical',
+        'zealous',
+        'militant',
+        'dictator',
+        'regime',
+        # Remove duplicates if any
+    ]
+    # Remove duplicates and convert to lowercase
+    bias_terms = list(set([term.lower() for term in bias_terms]))
+    return bias_terms
+
+def save_analysis_to_history(data):
+    email = st.session_state.get('email', 'guest')
+    history_file = f"{email}_history.json"
+    try:
+        if os.path.exists(history_file):
+            with open(history_file, 'r') as f:
+                history = json.load(f)
+        else:
+            history = []
+        history.append(data)
+        with open(history_file, 'w') as f:
+            json.dump(history, f, indent=4)
+        logger.info(f"Analysis saved to {history_file}.")
+    except Exception as e:
+        logger.error(f"Error saving analysis to history: {e}")
+
+def load_user_history(email):
+    history_file = f"{email}_history.json"
+    try:
+        if os.path.exists(history_file):
+            with open(history_file, 'r') as f:
+                history = json.load(f)
+            return history
+        else:
+            return []
+    except Exception as e:
+        logger.error(f"Error loading user history: {e}")
+        return []
 
 # --- User Management Functions ---
 
-def register_user_ui():
+def register_user():
     st.title("Register")
     st.write("Create a new account to access personalized features.")
 
     with st.form("registration_form"):
-        username = st.text_input("Username", key="register_username")
         email = st.text_input("Your Email", key="register_email")
         name = st.text_input("Your Name", key="register_name")
         password = st.text_input("Choose a Password", type='password', key="register_password")
@@ -176,7 +392,7 @@ def register_user_ui():
         submitted = st.form_submit_button("Register")
 
         if submitted:
-            if not username or not email or not name or not password or not password_confirm:
+            if not email or not name or not password or not password_confirm:
                 st.error("Please fill out all fields.")
                 return
             if not is_valid_email(email):
@@ -188,56 +404,58 @@ def register_user_ui():
             if not is_strong_password(password):
                 st.error("Password must be at least 8 characters long, include at least one uppercase letter, one digit, and one special character.")
                 return
-            success = create_user(username, name, email, password)
+            success = create_user(email, name, password)
             if success:
                 st.success("Registration successful. You can now log in.")
-                logger.info(f"New user registered: {username}")
+                logger.info(f"New user registered: {email}")
             else:
-                st.error("Registration failed. Username or Email may already be in use.")
-                logger.error(f"Registration failed for user: {username}")
+                st.error("Registration failed. Email may already be in use.")
+                logger.error(f"Registration failed for user: {email}")
 
-def login_user_ui():
+def login_user():
     st.title("Login")
     st.write("Access your account to view history and customize settings.")
 
     with st.form("login_form"):
-        username = st.text_input("Username", key="login_username")
+        email = st.text_input("Email", key="login_email")
         password = st.text_input("Password", type='password', key="login_password")
         login_button = st.form_submit_button("Login")
 
         if login_button:
-            if not username or not password:
-                st.error("Please enter both username and password.")
+            if not email or not password:
+                st.error("Please enter both email and password.")
                 return
-            if verify_password(username, password):
-                user = get_user(username)
-                if user:
-                    st.session_state['logged_in'] = True
-                    st.session_state['username'] = username
-                    st.session_state['email'] = user['email']  # Corrected access
-                    st.session_state['bias_terms'] = load_default_bias_terms()
-                    st.success("Logged in successfully.")
-                    logger.info(f"User '{username}' logged in successfully.")
-                else:
-                    st.error("User data not found.")
-                    logger.error(f"User data missing for '{username}' despite successful password verification.")
+            if verify_password(email, password):
+                st.session_state['logged_in'] = True
+                st.session_state['email'] = email
+                st.session_state['bias_terms'] = load_default_bias_terms()
+                st.success("Logged in successfully.")
+                logger.info(f"User '{email}' logged in successfully.")
             else:
-                st.error("Invalid username or password.")
-                logger.warning(f"Failed login attempt for username: '{username}'.")
+                st.error("Invalid email or password.")
+                logger.warning(f"Failed login attempt for email: '{email}'.")
 
-def reset_password_flow_ui():
+    st.markdown("---")
+    st.write("Forgot your password?")
+    if st.button("Reset Password"):
+        reset_password_flow()
+
+def reset_password_flow():
     st.title("Reset Password")
-    st.write("Enter your username and new password.")
+    st.write("Enter your email and new password.")
 
     with st.form("reset_password_form"):
-        username = st.text_input("Username", key="reset_username")
+        email = st.text_input("Email", key="reset_email")
         new_password = st.text_input("New Password", type='password', key="new_password")
         new_password_confirm = st.text_input("Confirm New Password", type='password', key="new_password_confirm")
         reset_button = st.form_submit_button("Reset Password")
 
         if reset_button:
-            if not username or not new_password or not new_password_confirm:
+            if not email or not new_password or not new_password_confirm:
                 st.error("Please fill out all fields.")
+                return
+            if not is_valid_email(email):
+                st.error("Please enter a valid email address.")
                 return
             if new_password != new_password_confirm:
                 st.error("Passwords do not match.")
@@ -245,18 +463,17 @@ def reset_password_flow_ui():
             if not is_strong_password(new_password):
                 st.error("Password must be at least 8 characters long, include at least one uppercase letter, one digit, and one special character.")
                 return
-            success = reset_password(username, new_password)
+            success = reset_password(email, new_password)
             if success:
                 st.success("Password reset successful. You can now log in.")
-                logger.info(f"User '{username}' reset their password.")
+                logger.info(f"User '{email}' reset their password.")
             else:
-                st.error("Password reset failed. Username may not exist.")
-                logger.error(f"Password reset failed for user: {username}")
+                st.error("Password reset failed. Email may not exist.")
+                logger.error(f"Password reset failed for user: {email}")
 
 def logout_user():
-    logger.info(f"User '{st.session_state['username']}' logged out.")
+    logger.info(f"User '{st.session_state['email']}' logged out.")
     st.session_state['logged_in'] = False
-    st.session_state['username'] = ''
     st.session_state['email'] = ''
     st.session_state['bias_terms'] = []
     st.sidebar.success("Logged out successfully.")
@@ -264,281 +481,552 @@ def logout_user():
 # --- Analysis Functions ---
 
 def perform_analysis(text, title="Article"):
-    models = initialize_models()
-    if models is None:
-        st.error("NLP models are not initialized. Cannot perform analysis.")
+    if not text:
+        st.error("No text to analyze.")
         return None
 
+    models = initialize_models()
+    nlp = models['nlp']
     sentiment_pipeline = models['sentiment_pipeline']
     propaganda_pipeline = models['propaganda_pipeline']
-    nlp = models['nlp']
 
-    # Preprocess text
-    cleaned_text = preprocess_text(text)
+    # Preprocess Text
+    text = preprocess_text(text)
+
+    # Split text into sentences
+    doc = nlp(text)
+    sentences = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
+    total_sentences = len(sentences)
+
+    if total_sentences == 0:
+        st.error("The article has no valid sentences to analyze.")
+        return None
 
     # Sentiment Analysis
-    sentiment_result = sentiment_pipeline(cleaned_text[:512])  # Limiting to first 512 tokens
+    try:
+        sentiment_results = sentiment_pipeline(sentences, batch_size=4, truncation=True)
+        sentiment_scores = []
+        for result in sentiment_results:
+            label = result['label']
+            # Map labels to numerical scores
+            if label == '1 star':
+                sentiment_scores.append(1)
+            elif label == '2 stars':
+                sentiment_scores.append(2)
+            elif label == '3 stars':
+                sentiment_scores.append(3)
+            elif label == '4 stars':
+                sentiment_scores.append(4)
+            elif label == '5 stars':
+                sentiment_scores.append(5)
+            else:
+                sentiment_scores.append(3)  # Neutral
+        avg_sentiment_score = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 3
+        avg_sentiment_score = round(avg_sentiment_score, 2)
+        # Interpret the average sentiment score
+        if avg_sentiment_score >= 3.5:
+            sentiment_label = 'Positive'
+        elif avg_sentiment_score <= 2.5:
+            sentiment_label = 'Negative'
+        else:
+            sentiment_label = 'Neutral'
+    except Exception as e:
+        st.error(f"Error during sentiment analysis: {e}")
+        avg_sentiment_score = 3
+        sentiment_label = 'Neutral'
+        logger.error(f"Error during sentiment analysis: {e}")
+
+    # Bias Detection
+    biased_sentences = []
+    bias_terms = st.session_state.get('bias_terms', load_default_bias_terms())
+    bias_terms = [term.lower() for term in bias_terms]
+    for sentence in sentences:
+        doc_sentence = nlp(sentence)
+        sentence_tokens = set([token.text.lower() for token in doc_sentence])
+        detected_terms = list(set([term for term in bias_terms if term in sentence_tokens]))
+        if detected_terms:
+            biased_sentences.append({'sentence': sentence, 'detected_terms': detected_terms})
+
+    bias_count = len(biased_sentences)
+
+    # Fix Bias Terms Duplication
+    for item in biased_sentences:
+        item['detected_terms'] = list(set(item['detected_terms']))
 
     # Propaganda Detection
-    propaganda_result = propaganda_pipeline(cleaned_text[:512])
+    propaganda_sentences = []
+    try:
+        for i in range(0, len(sentences), 8):  # Batch size of 8 for efficiency
+            batch_sentences = sentences[i:i+8]
+            predictions = propaganda_pipeline(batch_sentences)
+            for idx, prediction in enumerate(predictions):
+                label = prediction['label']
+                score = prediction['score']
+                if label.lower() == 'propaganda' and score >= 0.9:
+                    propaganda_sentences.append({
+                        'sentence': batch_sentences[idx],
+                        'score': score,
+                        'label': label
+                    })
+        propaganda_count = len(propaganda_sentences)
+    except Exception as e:
+        st.error(f"Error during propaganda detection: {e}")
+        logger.error(f"Error during propaganda detection: {e}")
+        propaganda_count = 0
 
-    # Named Entity Recognition using SpaCy
-    doc = nlp(cleaned_text)
-    entities = [(ent.text, ent.label_) for ent in doc.ents]
+    # Final Score Calculation
+    sentiment_percentage = ((avg_sentiment_score - 1) / 4) * 100  # Scale from 1-5 to 0-100%
+    # Subtract penalties proportional to the total number of sentences
+    bias_penalty = (bias_count / total_sentences) * 50  # Max penalty of 50
+    propaganda_penalty = (propaganda_count / total_sentences) * 50  # Max penalty of 50
+    final_score = sentiment_percentage - bias_penalty - propaganda_penalty
+    final_score = max(0, min(100, final_score))  # Ensure score is between 0 and 100
 
-    # Bias Term Detection
-    bias_terms = st.session_state.get('bias_terms', [])
-    bias_found = [term for term in bias_terms if term in cleaned_text.lower()]
-
-    analysis = {
+    # Save analysis data
+    analysis_data = {
         'title': title,
-        'sentiment': sentiment_result,
-        'propaganda': propaganda_result,
-        'entities': entities,
-        'bias_terms_found': bias_found,
-        'timestamp': datetime.datetime.now().isoformat(),
-        'username': st.session_state.get('username', 'guest'),
+        'text': text,
+        'sentiment_score': avg_sentiment_score,
+        'sentiment_label': sentiment_label,
+        'bias_score': bias_count,
+        'biased_sentences': biased_sentences,
+        'propaganda_score': propaganda_count,
+        'propaganda_sentences': propaganda_sentences,
+        'final_score': final_score,
+        'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         'email': st.session_state.get('email', 'guest')
     }
 
-    # Save to history
-    save_analysis_to_history(analysis)
-
-    return analysis
+    return analysis_data
 
 # --- Display Functions ---
 
 def display_results(data, is_nested=False):
-    st.subheader(f"Analysis Results for: {data['title']}")
+    with st.container():
+        st.markdown(f"## {data.get('title', 'Untitled Article')}")
+        st.markdown(f"**Date:** {data.get('date', 'N/A')}")
+        st.markdown(f"**Analyzed by:** {data.get('email', 'guest')}")
 
-    # Sentiment Analysis
-    st.markdown("### Sentiment Analysis")
-    sentiment = data['sentiment'][0]
-    st.write(f"**Label:** {sentiment['label']}")
-    st.write(f"**Score:** {sentiment['score']:.2f}")
+        # Overview Metrics in Columns
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            sentiment_label = data.get('sentiment_label', 'Neutral')
+            sentiment_score = data.get('sentiment_score', 3.0)
+            if sentiment_label == "Positive":
+                sentiment_color = "#28a745"  # Green
+            elif sentiment_label == "Negative":
+                sentiment_color = "#dc3545"  # Red
+            else:
+                sentiment_color = "#6c757d"  # Gray
+            st.markdown(f"**Sentiment:** <span style='color:{sentiment_color};'>{sentiment_label}</span>", unsafe_allow_html=True)
+            st.metric(label="Sentiment Score", value=f"{sentiment_score:.2f}")
 
-    # Propaganda Detection
-    st.markdown("### Propaganda Detection")
-    propaganda = data['propaganda'][0]
-    st.write(f"**Label:** {propaganda['label']}")
-    st.write(f"**Score:** {propaganda['score']:.2f}")
+        with col2:
+            bias_count = data.get('bias_score', 0)
+            st.markdown("**Bias Count**")
+            st.metric(label="Bias Terms Detected", value=f"{int(bias_count)}")
 
-    # Named Entities
-    st.markdown("### Named Entities")
-    if data['entities']:
-        entities_df = pd.DataFrame(data['entities'], columns=['Entity', 'Type'])
-        st.dataframe(entities_df)
-    else:
-        st.write("No named entities found.")
+        with col3:
+            st.markdown("**Propaganda Count**")
+            propaganda_count = data.get('propaganda_score', 0)
+            st.metric(label="Propaganda Sentences Detected", value=f"{int(propaganda_count)}")
 
-    # Bias Terms
-    st.markdown("### Detected Bias Terms")
-    if data['bias_terms_found']:
-        bias_terms_str = ', '.join(data['bias_terms_found'])
-        st.write(f"**Bias Terms Found:** {bias_terms_str}")
-    else:
-        st.write("No bias terms detected.")
+        with col4:
+            final_score = data.get('final_score', 0.0)
+            st.markdown("**Final Score**")
+            st.metric(
+                label="Final Score",
+                value=f"{final_score:.2f}",
+                help="A score out of 100 indicating overall article quality."
+            )
 
-    # Visualizations
-    st.markdown("### Visualizations")
+        st.markdown("---")  # Separator
 
-    # Sentiment Pie Chart
-    sentiment_labels = [sentiment['label']]
-    sentiment_values = [sentiment['score']]
-    fig_sentiment = px.pie(names=sentiment_labels, values=sentiment_values, title='Sentiment Distribution')
-    st.plotly_chart(fig_sentiment)
+        # Tabs for Different Analysis Sections
+        tabs = st.tabs(["Sentiment Analysis", "Bias Detection", "Propaganda Detection"])
 
-    # Propaganda Bar Chart
-    propaganda_labels = [propaganda['label']]
-    propaganda_values = [propaganda['score']]
-    fig_propaganda = px.bar(x=propaganda_labels, y=propaganda_values, title='Propaganda Detection Score')
-    st.plotly_chart(fig_propaganda)
+        # --- Sentiment Analysis Tab ---
+        with tabs[0]:
+            st.markdown("### Sentiment Analysis")
+            st.markdown(f"**Overall Sentiment:** <span style='color:{sentiment_color}'>{sentiment_label}</span>", unsafe_allow_html=True)
+            st.write(f"**Average Sentiment Score:** {sentiment_score:.2f} out of 5")
 
-def display_comparative_results(analyses):
-    st.subheader("Comparative Analysis Results")
+        # --- Bias Detection Tab ---
+        with tabs[1]:
+            st.markdown("### Bias Detection")
+            st.write(f"**Bias Count:** {int(bias_count)} bias terms detected.")
 
-    # Sentiment Comparison
-    st.markdown("### Sentiment Comparison")
-    sentiment_data = {}
-    for analysis in analyses:
-        label = analysis['sentiment'][0]['label']
-        score = analysis['sentiment'][0]['score']
-        sentiment_data[analysis['title']] = score
-    sentiment_df = pd.DataFrame.from_dict(sentiment_data, orient='index', columns=['Sentiment Score'])
-    fig_sentiment = px.bar(sentiment_df, x=sentiment_df.index, y='Sentiment Score',
-                           title='Sentiment Comparison', labels={'x': 'Article', 'Sentiment Score': 'Score'})
-    st.plotly_chart(fig_sentiment)
+            if data.get('biased_sentences'):
+                for idx, item in enumerate(data['biased_sentences'], 1):
+                    st.markdown(f"**{idx}. Sentence:** {item['sentence']}")
+                    st.markdown(f"   - **Detected Bias Terms:** {', '.join(set(item['detected_terms']))}")
+            else:
+                st.write("No biased sentences detected.")
 
-    # Propaganda Comparison
-    st.markdown("### Propaganda Comparison")
-    propaganda_data = {}
-    for analysis in analyses:
-        label = analysis['propaganda'][0]['label']
-        score = analysis['propaganda'][0]['score']
-        propaganda_data[analysis['title']] = score
-    propaganda_df = pd.DataFrame.from_dict(propaganda_data, orient='index', columns=['Propaganda Score'])
-    fig_propaganda = px.bar(propaganda_df, x=propaganda_df.index, y='Propaganda Score',
-                            title='Propaganda Detection Comparison', labels={'x': 'Article', 'Propaganda Score': 'Score'})
-    st.plotly_chart(fig_propaganda)
+        # --- Propaganda Detection Tab ---
+        with tabs[2]:
+            st.markdown("### Propaganda Detection")
+            st.write(f"**Propaganda Count:** {int(propaganda_count)} propaganda sentences detected.")
 
-    # Bias Terms Comparison
-    st.markdown("### Bias Terms Comparison")
-    bias_data = {}
-    for analysis in analyses:
-        bias_count = len(analysis['bias_terms_found'])
-        bias_data[analysis['title']] = bias_count
-    bias_df = pd.DataFrame.from_dict(bias_data, orient='index', columns=['Bias Terms Found'])
-    fig_bias = px.bar(bias_df, x=bias_df.index, y='Bias Terms Found',
-                      title='Bias Terms Detection Comparison', labels={'x': 'Article', 'Bias Terms Found': 'Count'})
-    st.plotly_chart(fig_bias)
+            if data.get('propaganda_sentences'):
+                for idx, item in enumerate(data['propaganda_sentences'], 1):
+                    st.markdown(f"**{idx}. Sentence:** {item['sentence']}")
+                    st.markdown(f"   - **Detected Label:** {item['label']}")
+                    st.markdown(f"   - **Confidence Score:** {item['score']:.2f}")
+            else:
+                st.write("No propaganda detected.")
+
+        st.markdown("---")  # Separator
+
+        # Save to history if logged in
+        if st.session_state.get('logged_in', False) and not is_nested:
+            save_analysis_to_history(data)
+            st.success("Analysis saved to your history.")
+
+            # Provide Enhanced Download Option for CSV
+            csv_data = {
+                'Title': data.get('title', 'Untitled'),
+                'Date': data.get('date', ''),
+                'Analyzed By': data.get('email', 'guest'),
+                'Sentiment Score': data.get('sentiment_score', 3.0),
+                'Sentiment Label': data.get('sentiment_label', 'Neutral'),
+                'Bias Count': data.get('bias_score', 0),
+                'Propaganda Count': data.get('propaganda_score', 0),
+                'Final Score': data.get('final_score', 0.0),
+                'Biased Sentences': json.dumps(data.get('biased_sentences', []), ensure_ascii=False),
+                'Propaganda Sentences': json.dumps(data.get('propaganda_sentences', []), ensure_ascii=False)
+            }
+            df_csv = pd.DataFrame([csv_data])
+            csv_buffer = df_csv.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Download Comprehensive Analysis as CSV",
+                data=csv_buffer,
+                file_name=f"analysis_{data.get('title', 'untitled').replace(' ', '_')}.csv",
+                mime='text/csv'
+            )
+
+        # --- Feedback Section ---
+        if not is_nested:
+            st.markdown("---")
+            st.markdown("### Provide Feedback")
+            feedback = st.text_area(
+                "Your Feedback",
+                placeholder="Enter your feedback here...",
+                height=100
+            )
+            if st.button("Submit Feedback"):
+                if feedback:
+                    # Save feedback to a JSON file
+                    feedback_path = 'feedback.json'
+                    feedback_entry = {
+                        'email': st.session_state.get('email', 'guest'),
+                        'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        'feedback': feedback
+                    }
+                    try:
+                        if not os.path.exists(feedback_path):
+                            with open(feedback_path, 'w') as f:
+                                json.dump([], f)
+                            logger.info("Created new feedback file.")
+                        with open(feedback_path, 'r') as f:
+                            feedback_data = json.load(f)
+                        feedback_data.append(feedback_entry)
+                        with open(feedback_path, 'w') as f:
+                            json.dump(feedback_data, f, indent=4)
+                        logger.info(f"Feedback saved from user '{st.session_state.get('email', 'guest')}'.")
+                        st.success("Thank you for your feedback!")
+                    except Exception as e:
+                        logger.error(f"Error saving feedback: {e}", exc_info=True)
+                        st.error("An error occurred while saving your feedback.")
+                else:
+                    st.warning("Please enter your feedback before submitting.")
 
 # --- Single Article Analysis Function ---
-
 def single_article_analysis():
-    st.title("Single Article Analysis")
-    st.write("Analyze the bias and sentiment of a single news article.")
+    st.header("Single Article Analysis")
+    st.write("Enter the article URL or paste the article text below.")
 
-    with st.form("single_article_form"):
-        url = st.text_input("Enter the URL of the article:", key="single_article_url")
-        uploaded_file = st.file_uploader("Or upload a text file containing the article:", type=["txt"])
-        submitted = st.form_submit_button("Analyze")
+    input_type = st.radio(
+        "Select Input Type",
+        ['Enter URL', 'Paste Article Text'],
+        key="single_article_input_type"
+    )
+    if input_type == 'Enter URL':
+        url = st.text_input(
+            "Article URL",
+            placeholder="https://example.com/article",
+            key="single_article_url"
+        ).strip()
+        article_text = ''
+    else:
+        article_text = st.text_area(
+            "Article Text",
+            placeholder="Paste the article text here...",
+            height=300,
+            key="single_article_text"
+        ).strip()
+        url = ''
 
-        if submitted:
-            if not url and not uploaded_file:
-                st.error("Please provide a URL or upload a text file.")
-                return
+    title = st.text_input(
+        "Article Title",
+        value="Article",
+        placeholder="Enter a title for the article",
+        key="single_article_title"
+    )
+
+    if st.button("Analyze", key="analyze_single_article"):
+        if input_type == 'Enter URL':
             if url:
-                article_text = fetch_article_text(url)
-                title = url
-            else:
-                try:
-                    article_text = uploaded_file.read().decode('utf-8')
-                    title = uploaded_file.name
-                except Exception as e:
-                    st.error("Error reading the uploaded file.")
-                    logger.error(f"Error reading uploaded file: {e}")
+                if is_valid_url(url):
+                    with st.spinner('Fetching the article...'):
+                        article_text_fetched = fetch_article_text(url)
+                        if article_text_fetched:
+                            sanitized_text = preprocess_text(article_text_fetched)
+                            st.success("Article text fetched successfully.")
+                            article_text = sanitized_text
+                        else:
+                            st.error("Failed to fetch article text. Please check the URL and try again.")
+                            return
+                else:
+                    st.error("Please enter a valid URL.")
                     return
-            if article_text:
-                with st.spinner("Performing analysis..."):
-                    analysis = perform_analysis(article_text, title=title)
-                if analysis:
-                    display_results(analysis)
+            else:
+                st.error("Please enter a URL.")
+                return
+        else:
+            if not article_text.strip():
+                st.error("Please paste the article text.")
+                return
+            article_text = preprocess_text(article_text)
+
+        with st.spinner('Performing analysis...'):
+            data = perform_analysis(article_text, title)
+            if data:
+                if st.session_state.get('logged_in', False):
+                    data['email'] = st.session_state['email']
+                else:
+                    data['email'] = 'guest'
+                st.success("Analysis completed successfully.")
+                display_results(data)
+            else:
+                st.error("Failed to perform analysis on the provided article.")
 
 # --- Comparative Analysis Function ---
-
 def comparative_analysis():
-    st.title("Comparative Analysis")
-    st.write("Compare the bias and sentiment across multiple news articles.")
+    st.header("Comparative Analysis")
+    st.write("Compare multiple articles side by side.")
 
-    with st.form("comparative_analysis_form"):
-        urls = st.text_area("Enter the URLs of the articles (one per line):", key="comparative_urls")
-        uploaded_files = st.file_uploader("Or upload multiple text files containing the articles:", type=["txt"], accept_multiple_files=True)
-        submitted = st.form_submit_button("Analyze")
+    num_articles = st.number_input("Number of articles to compare", min_value=2, max_value=5, value=2, step=1)
 
-        if submitted:
-            if not urls and not uploaded_files:
-                st.error("Please provide URLs or upload text files.")
-                return
-            articles = []
-            titles = []
-            if urls:
-                url_list = urls.strip().split('\n')
-                for url in url_list:
-                    url = url.strip()
-                    if url:
-                        text = fetch_article_text(url)
-                        if text:
-                            articles.append(text)
-                            titles.append(url)
-            if uploaded_files:
-                for file in uploaded_files:
-                    try:
-                        text = file.read().decode('utf-8')
-                        articles.append(text)
-                        titles.append(file.name)
-                    except Exception as e:
-                        st.error(f"Error reading file {file.name}.")
-                        logger.error(f"Error reading file {file.name}: {e}")
-            if articles:
-                analyses = []
-                with st.spinner("Performing analysis on all articles..."):
-                    for text, title in zip(articles, titles):
-                        analysis = perform_analysis(text, title=title)
-                        if analysis:
-                            analyses.append(analysis)
-                if analyses:
-                    display_comparative_results(analyses)
+    article_texts = []
+    titles = []
+    emails = []
+    analyses = []
+
+    for i in range(int(num_articles)):
+        st.subheader(f"Article {i+1}")
+        input_type = st.radio(
+            f"Select Input Type for Article {i+1}",
+            ['Enter URL', 'Paste Article Text'],
+            key=f"comp_input_type_{i}"
+        )
+        if input_type == 'Enter URL':
+            url = st.text_input(
+                f"Article URL for Article {i+1}",
+                placeholder="https://example.com/article",
+                key=f"comp_url_{i}"
+            ).strip()
+            article_text = ''
+            if url:
+                if is_valid_url(url):
+                    with st.spinner(f'Fetching the article {i+1}...'):
+                        article_text_fetched = fetch_article_text(url)
+                        if article_text_fetched:
+                            sanitized_text = preprocess_text(article_text_fetched)
+                            st.success(f"Article {i+1} text fetched successfully.")
+                            article_text = sanitized_text
+                        else:
+                            st.error(f"Failed to fetch article text for Article {i+1}. Please check the URL and try again.")
+                            return
+                else:
+                    st.error(f"Please enter a valid URL for Article {i+1}.")
+                    return
             else:
-                st.error("No valid articles to analyze.")
+                st.error(f"Please enter a URL for Article {i+1}.")
+                return
+        else:
+            article_text = st.text_area(
+                f"Article Text for Article {i+1}",
+                height=200,
+                key=f"comp_text_{i}"
+            )
+            if not article_text.strip():
+                st.error(f"Please paste the article text for Article {i+1}.")
+                return
+            article_text = preprocess_text(article_text)
+        title = st.text_input(
+            f"Title for Article {i+1}",
+            key=f"comp_title_{i}"
+        )
+        titles.append(title)
+        article_texts.append(article_text)
+
+    if st.button("Analyze Articles", key="compare_articles"):
+        for i, text in enumerate(article_texts):
+            if text.strip():
+                with st.spinner(f"Analyzing Article {i+1}..."):
+                    data = perform_analysis(text, titles[i])
+                    if data:
+                        analyses.append(data)
+            else:
+                st.error(f"Please provide text for Article {i+1}.")
+                return
+        if analyses:
+            st.success("Comparative Analysis Completed.")
+            display_comparative_results(analyses)
+        else:
+            st.error("Failed to perform comparative analysis.")
+
+def display_comparative_results(analyses):
+    st.markdown("## Comparative Results")
+
+    df = pd.DataFrame([
+        {
+            'Title': data['title'],
+            'Sentiment Score': data['sentiment_score'],
+            'Sentiment Label': data['sentiment_label'],
+            'Bias Count': data['bias_score'],
+            'Propaganda Count': data['propaganda_score'],
+            'Final Score': data['final_score'],
+        }
+        for data in analyses
+    ])
+
+    st.dataframe(df.style.highlight_max(axis=0))
+
+    # Detailed Results
+    for data in analyses:
+        st.markdown("---")
+        display_results(data, is_nested=True)
 
 # --- Settings Page Function ---
-
 def settings_page():
-    st.title("Settings")
-    st.write("Customize your preferences.")
+    st.header("Settings")
+    st.write("Customize your analysis settings.")
 
-    with st.form("settings_form"):
-        st.markdown("### Customize Bias Terms")
-        custom_bias_terms = st.text_area(
-            "Add your own bias terms (separated by commas):",
-            value="",
-            help="Example: biased, manipulative, deceptive"
+    # Manage Bias Terms
+    st.subheader("Manage Bias Terms")
+
+    # Input field to add a new bias term
+    with st.form("add_bias_term_form"):
+        new_bias_term = st.text_input(
+            "Add a New Bias Term",
+            placeholder="Enter new bias term",
+            key="add_bias_term_input"
         )
-        submitted = st.form_submit_button("Update Settings")
-
+        submitted = st.form_submit_button("Add Term")
         if submitted:
-            if custom_bias_terms:
-                user_terms = [term.strip() for term in custom_bias_terms.split(',') if term.strip()]
-                st.session_state['bias_terms'] = load_custom_bias_terms(user_terms)
-                st.success("Bias terms updated successfully.")
-                logger.info(f"User '{st.session_state['username']}' updated bias terms.")
+            if new_bias_term:
+                if new_bias_term.lower() in [term.lower() for term in st.session_state['bias_terms']]:
+                    st.warning("This bias term already exists.")
+                else:
+                    st.session_state['bias_terms'].append(new_bias_term)
+                    st.success(f"Added new bias term: {new_bias_term}")
+                    logger.info(f"Added new bias term: {new_bias_term}")
+                # Remove duplicates
+                st.session_state['bias_terms'] = list(set(st.session_state['bias_terms']))
             else:
-                st.session_state['bias_terms'] = load_default_bias_terms()
-                st.success("Bias terms reset to default.")
-                logger.info(f"User '{st.session_state['username']}' reset bias terms to default.")
+                st.warning("Please enter a valid bias term.")
+
+    # Text area to edit bias terms
+    st.subheader("Edit Bias Terms")
+    bias_terms_str = '\n'.join(st.session_state['bias_terms'])
+    edited_bias_terms_str = st.text_area(
+        "Edit Bias Terms (one per line)",
+        value=bias_terms_str,
+        height=200,
+        key="edit_bias_terms_textarea"
+    )
+    if st.button("Save Bias Terms", key="save_bias_terms_button"):
+        updated_bias_terms = [term.strip() for term in edited_bias_terms_str.strip().split('\n') if term.strip()]
+        # Remove duplicates and ensure uniqueness
+        unique_terms = []
+        seen = set()
+        for term in updated_bias_terms:
+            lower_term = term.lower()
+            if lower_term not in seen:
+                unique_terms.append(term)
+                seen.add(lower_term)
+        st.session_state['bias_terms'] = unique_terms
+        st.success("Bias terms updated successfully.")
+        logger.info("Updated bias terms list.")
+
+    # Button to reset bias terms to default
+    if st.button("Reset Bias Terms to Default", key="reset_bias_terms"):
+        st.session_state['bias_terms'] = load_default_bias_terms()
+        st.success("Bias terms have been reset to default.")
+        logger.info("Reset bias terms list.")
+
+    st.markdown("### Note:")
+    st.markdown("Use the **'Add a New Bias Term'** form to introduce new terms. You can edit existing terms in the text area above. To reset to the default bias terms, click the **'Reset Bias Terms to Default'** button.")
 
 # --- Help Page Function ---
-
 def help_feature():
-    st.title("Help & Documentation")
+    st.header("Help")
     st.write("""
-    ## Media Bias Detection Tool
+    **Media Bias Detection Tool** helps you analyze articles for sentiment, bias, and propaganda. Here's how to use the tool:
 
-    ### Features
-    - **User Authentication**: Register, login, and manage your account securely.
-    - **Single Article Analysis**: Analyze sentiment, propaganda, named entities, and bias terms in a single article.
-    - **Comparative Analysis**: Compare multiple articles to identify differences in sentiment and bias.
-    - **Customizable Bias Terms**: Add your own bias terms to tailor the analysis to your preferences.
-    - **History**: View your past analyses for reference.
+    ### **1. Single Article Analysis**
+    - **Input Type**: Choose to either enter a URL or paste the article text directly.
+    - **Article Title**: Provide a title for your reference.
+    - **Analyze**: Click the "Analyze" button to perform the analysis.
+    - **Save Analysis**: After analysis, it is automatically saved to your history.
 
-    ### How to Use
-    1. **Register**: Create a new account using the Register page.
-    2. **Login**: Access your account using the Login page.
-    3. **Single Article Analysis**: Provide a URL or upload a text file to analyze a single article.
-    4. **Comparative Analysis**: Provide multiple URLs or upload multiple text files to compare articles.
-    5. **Settings**: Customize your bias terms to enhance analysis accuracy.
-    6. **History**: Review your past analyses and results.
+    ### **2. Comparative Analysis**
+    - **Compare Articles**: Compare multiple articles side by side.
+    - **Input Articles**: Provide titles and texts or URLs for each article.
+    - **Analyze**: Click "Analyze Articles" to perform comparative analysis.
 
-    ### Support
-    If you encounter any issues or have questions, please contact support at [support@example.com](mailto:support@example.com).
+    ### **3. Settings**
+    - **Manage Bias Terms**: Add new bias terms or edit existing ones to customize the analysis.
+    - **Reset Terms**: Revert to the default bias terms if needed.
+
+    ### **4. Login & Registration**
+    - **Register**: Create a new account with a unique email and strong password.
+    - **Login**: Access your personalized dashboard with your preferences and history.
+    - **Reset Password**: If you forget your password, use the reset password feature.
+    - **Logout**: Securely log out of your account.
+
+    ### **5. Feedback**
+    - **Provide Feedback**: After analysis, you can provide feedback to help improve the tool.
+
+    ### **6. Download Analysis**
+    - **Download as CSV**: After analysis, download your results as a CSV file for your records.
+
+    If you encounter any issues or have questions, please refer to the documentation or contact support.
     """)
 
 # --- History Page Function ---
-
 def display_history():
-    st.title("Analysis History")
-    st.write("View your past analyses.")
-
-    email = st.session_state.get('email', 'guest')
+    st.header("Your Analysis History")
+    email = st.session_state.get('email', '')
     history = load_user_history(email)
 
     if not history:
-        st.info("No analysis history found.")
+        st.info("No history available.")
         return
 
-    for analysis in history:
-        st.markdown("---")
-        display_results(analysis, is_nested=True)
+    # Convert history to DataFrame for sorting
+    history_df = pd.DataFrame(history)
+
+    # Sort history by date descending
+    history_df['date'] = pd.to_datetime(history_df['date'])
+    history_df_sorted = history_df.sort_values(by='date', ascending=False)
+
+    for idx, entry in history_df_sorted.iterrows():
+        with st.expander(f"{entry.get('title', 'Untitled')} - {entry.get('date', 'N/A')}", expanded=False):
+            # Since entry is a dict, no need to convert to dict again
+            display_results(entry, is_nested=True)
 
 # --- Main Function ---
 
@@ -546,8 +1034,6 @@ def main():
     # Initialize session state variables if they don't exist
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
-    if 'username' not in st.session_state:
-        st.session_state['username'] = ''
     if 'email' not in st.session_state:
         st.session_state['email'] = ''
     if 'bias_terms' not in st.session_state:
@@ -571,14 +1057,14 @@ def main():
     # Page Routing
     if page == "Login":
         if st.session_state['logged_in']:
-            st.sidebar.info(f"Already logged in as **{st.session_state['username']}**.")
+            st.sidebar.info(f"Already logged in as **{st.session_state['email']}**.")
         else:
-            login_user_ui()
+            login_user()
     elif page == "Register":
         if st.session_state['logged_in']:
-            st.sidebar.info(f"Already registered as **{st.session_state['username']}**.")
+            st.sidebar.info(f"Already registered as **{st.session_state['email']}**.")
         else:
-            register_user_ui()
+            register_user()
     elif page == "Single Article Analysis":
         if not st.session_state['logged_in']:
             st.warning("Please log in to access this page.")
@@ -604,7 +1090,7 @@ def main():
 
     # Logout Option
     if st.session_state['logged_in'] and page not in ["Login", "Register"]:
-        st.sidebar.markdown(f"**Logged in as:** {st.session_state['username']}")
+        st.sidebar.markdown(f"**Logged in as:** {st.session_state['email']}")
         if st.sidebar.button("Logout"):
             logout_user()
 
